@@ -1,0 +1,64 @@
+moth-project/
+│
+├── data/
+│   ├── EU/
+│   │   ├── detection/
+│   │   └── classification/
+│   │
+│   ├── NIE/
+│   │   ├── detection/
+│   │   └── classification/
+│   │
+│   └── DEMO/
+│       ├── detection/
+│       └── classification/
+├── tasks/
+│   ├── detection/
+│   │   ├── yolo/
+│   │   │   ├── train.py
+│   │   │   └── evaluate.py
+│   │   │
+│   │   ├── sam/
+│   │   │   ├── generate_masks.py
+│   │   │   ├── masks_to_boxes.py
+│   │   │   └── evaluate.py
+│   │   │
+│   │   └── comparison.py
+│   │
+│   └── classification/
+│       ├── yolo_cls/
+│       │   ├── train.py
+│       │   └── evaluate.py
+│       │
+│       ├── vit/
+│       │   ├── train.py
+│       │   └── evaluate.py
+│       │
+│       └── comparison.py
+│
+├── outputs/
+│   ├── detection/
+│   │   ├── YOLO_EU/          # First run: Model + Dataset
+│   │   ├── YOLO_EU_1/        # Second run: Automatic increment
+│   │   ├── SAM_NIE/
+│   │   └── YOLO_DEMO/
+│   │
+│   └── classification/
+│       ├── VIT_EU/
+│       ├── VIT_EU_1/         # Handles collisions automatically
+│       ├── YOLOCLS_NIE/
+│       └── VIT_DEMO/
+│
+└── README.md
+
+from pathlib import Path
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+DATA_DIR = PROJECT_ROOT / "data"
+OUTPUT_DIR = PROJECT_ROOT / "outputs"
+
+model.train(
+    data="data/EU/detection",
+    project="outputs/EU/detection/yolo",
+    name="run_001"
+)

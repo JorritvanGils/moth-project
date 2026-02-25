@@ -1,0 +1,6 @@
+https://chatgpt.com/c/699dc2cb-6db8-832b-8dab-0652377395a7 <- folder structure
+
+launch_gpu vast ai gpu functionality. simplified from remote_gpu
+Use Pytorch and hugging face transformers for Vision Transformers (ViT)
+Timm for managing advanced transformer architectures (Swin-b and MobileVit)
+The metric handler should create Training and validating graphs ideally of multiple models combined

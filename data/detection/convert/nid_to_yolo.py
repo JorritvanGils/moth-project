@@ -1,32 +1,31 @@
 import json
-import os
 import shutil
+from pathlib import Path
 
-yolo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-root = os.path.join(os.path.dirname(yolo_root), "orig_datasets", "nid-dataset")
+DETECTION_DIR = Path(__file__).resolve().parents[2] / "detection"
+SOURCE_DIR = DETECTION_DIR / "nid" 
+DEST_DIR = DETECTION_DIR / "nid_yolo"
 
-
-with open(os.path.join(root, "images.txt")) as f:
+with open(SOURCE_DIR / "images.txt") as f:
     images = [line.strip().split(" ", 1)[1] for line in f]
 
-with open(os.path.join(root, "tr_ID.txt")) as f:
+with open(SOURCE_DIR / "tr_ID.txt") as f:
     split = [int(line.strip()) for line in f]
 
-with open(os.path.join(root, "multi_boxes.json")) as f:
+with open(SOURCE_DIR / "multi_boxes.json") as f:
     boxes_data = {entry["image"]: entry["objects"] for entry in json.load(f)}
 
 for img_rel, is_train in zip(images, split):
     subset = "train" if is_train == 1 else "val"
 
-    img_src = os.path.join(root, "images", img_rel)
-    # print(f"Processing {img_src} for subset {subset}...")
-    img_name = os.path.basename(img_rel)
+    img_src = SOURCE_DIR / "images" / img_rel
+    img_name = Path(img_rel).name
 
-    img_dst = os.path.join(yolo_root, "datasets", "nid_det", "images", subset, img_name)
-    lbl_dst = os.path.join(yolo_root, "datasets", "nid_det", "labels", subset, img_name.replace(".JPG", ".txt"))
+    img_dst = DEST_DIR / "images" / subset / img_name
+    lbl_dst = DEST_DIR / "labels" / subset / img_name.replace(".JPG", ".txt")
 
-    os.makedirs(os.path.dirname(img_dst), exist_ok=True)
-    os.makedirs(os.path.dirname(lbl_dst), exist_ok=True)
+    img_dst.parent.mkdir(parents=True, exist_ok=True)
+    lbl_dst.parent.mkdir(parents=True, exist_ok=True)
 
     shutil.copy(img_src, img_dst)
 

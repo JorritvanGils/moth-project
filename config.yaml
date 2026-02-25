@@ -1,0 +1,38 @@
+experiment: classification   # detection | classification
+
+detection:
+  model_type: yolo
+  pretrained: yolov8n.pt
+  data_path: /path/to/nid_det.yaml
+  output_path: ./runs/detection
+  run_name: moth_det_001
+  params:
+    epochs: 50
+    imgsz: 640
+    device: cpu
+
+classification:
+  model_type: vit   # yolo | vit
+  # Common settings for all classification models
+  data_path: /path/to/eu_cls_folder
+  output_path: ./runs/classification
+  run_name: moth_cls_001
+
+  params:
+    epochs: 20
+    imgsz: 224
+    device: cpu
+    batch: 32
+    workers: 8
+    optimizer: Adam
+    learning_rate: 2e-5
+    weight_decay: 0.01
+    warmup_steps: 500    
+  
+  yolo:
+    number: 8
+    model_size: nano # nano, small, medium, large, xlarge
+
+  vit:
+    model_size: base  # base, large, huge
+    num_labels: 100  # number of classes

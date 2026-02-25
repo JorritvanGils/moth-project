@@ -4,9 +4,7 @@ __pycache__/
 *.pyc
 settings.json
 
-
 data/detection/*
 !data/detection/convert
 
 moth_project.egg-info
-

@@ -1,11 +1,16 @@
 experiment: classification   # detection | classification
 
 detection:
-  model_type: yolo
-  pretrained: yolov8n.pt
+  model_type: yolo # yolo | sam
   data_path: /path/to/nid_det.yaml
-  output_path: ./runs/detection
-  run_name: moth_det_001
+
+  yolo:
+    number: 8
+    model_size: nano # nano, small, medium, large, xlarge
+
+  sam:
+    model_type: vit_h  # vit_h, vit_l, vit_b    
+
   params:
     epochs: 50
     imgsz: 640
@@ -13,10 +18,7 @@ detection:
 
 classification:
   model_type: vit   # yolo | vit
-  # Common settings for all classification models
   data_path: /path/to/eu_cls_folder
-  output_path: ./runs/classification
-  run_name: moth_cls_001
 
   params:
     epochs: 20

@@ -6,7 +6,7 @@ import json
 import time
 import subprocess
 import requests
-from typing import List, Dict, Optional, Tuple, Any
+from typing import List, Dict, Optional, Tuple, Any, Union
 from dotenv import load_dotenv, find_dotenv
 
 # Simple exception classes
@@ -177,40 +177,148 @@ class SimpleVastDeployer:
         print("="*110)
         print(f"\n📊 Total offers shown: {len(offers)} (max 10 per GPU, cheapest per location)")
     
-    def select_offer_interactive(self, offers: List[Dict]) -> Optional[Dict]:
+    def parse_selection(self, selection: str, max_idx: int) -> List[int]:
         """
-        Interactive selection of GPU offer
+        Parse user selection which can be:
+        - Single number: "5"
+        - Range: "1-5"
+        - Comma-separated: "1,3,5"
+        - Mixed: "1-3,5,7-9"
         
         Returns:
-            Selected offer dictionary or None
+            List of selected indices
+        """
+        selected_indices = set()
+        
+        # Split by comma
+        parts = selection.split(',')
+        
+        for part in parts:
+            part = part.strip()
+            if not part:
+                continue
+                
+            # Check if it's a range (contains -)
+            if '-' in part:
+                try:
+                    start, end = map(int, part.split('-', 1))
+                    if start < 1 or end > max_idx or start > end:
+                        print(f"⚠️  Invalid range {part} (must be between 1 and {max_idx})")
+                        continue
+                    selected_indices.update(range(start, end + 1))
+                except ValueError:
+                    print(f"⚠️  Invalid range format: {part}")
+            else:
+                # Single number
+                try:
+                    idx = int(part)
+                    if 1 <= idx <= max_idx:
+                        selected_indices.add(idx)
+                    else:
+                        print(f"⚠️  Number {idx} out of range (1-{max_idx})")
+                except ValueError:
+                    print(f"⚠️  Invalid number: {part}")
+        
+        return sorted(selected_indices)
+    
+    def select_offers_interactive(self, offers: List[Dict]) -> List[Dict]:
+        """
+        Interactive selection of GPU offers - supports ranges
+        
+        Returns:
+            List of selected offer dictionaries
         """
         if not offers:
-            return None
+            return []
             
         self.display_offers(offers)
         
         while True:
             try:
-                choice = input(f"\nSelect GPU offer (1-{len(offers)}, 'q' to quit): ").strip()
+                choice = input(f"\nSelect GPU offer(s) (e.g., '5', '1-5', '1,3,5', '1-5,7,9-12', or 'q' to quit): ").strip()
                 
                 if choice.lower() == 'q':
-                    return None
-                    
-                idx = int(choice)
-                if 1 <= idx <= len(offers):
-                    selected = offers[idx - 1]
-                    print(f"\n✅ Selected: {selected['num_gpus']}x {selected['gpu_name']} "
-                          f"at {selected.get('geolocation', 'Unknown')} - "
-                          f"${selected.get('dph_total', 0):.2f}/hr")
-                    return selected
+                    return []
+                
+                if choice.lower() == 'all':
+                    # Select all offers
+                    selected_indices = list(range(1, len(offers) + 1))
                 else:
-                    print(f"Please enter a number between 1 and {len(offers)}")
-                    
-            except ValueError:
-                print("Please enter a valid number")
+                    selected_indices = self.parse_selection(choice, len(offers))
+                
+                if not selected_indices:
+                    print("No valid selections made. Please try again.")
+                    continue
+                
+                selected_offers = [offers[i-1] for i in selected_indices]
+                
+                print(f"\n✅ Selected {len(selected_offers)} offer(s):")
+                for i, offer in enumerate(selected_offers, 1):
+                    print(f"   {i}. {offer['num_gpus']}x {offer['gpu_name']} "
+                          f"at {offer.get('geolocation', 'Unknown')} - "
+                          f"${offer.get('dph_total', 0):.2f}/hr")
+                
+                confirm = input("\nProceed with these offers? (Y/n): ").strip().lower()
+                if confirm not in ('n', 'no'):
+                    return selected_offers
+                
             except KeyboardInterrupt:
                 print("\nSelection cancelled")
-                return None
+                return []
+    
+    def try_offers_sequential(self, offers: List[Dict], disk_size: int = 100) -> bool:
+        """
+        Try multiple offers sequentially until one works
+        
+        Args:
+            offers: List of offers to try
+            disk_size: Disk size in GB
+            
+        Returns:
+            True if one succeeds, False if all fail
+        """
+        print(f"\n🔄 Will try {len(offers)} offer(s) sequentially until one works...")
+        
+        for idx, offer in enumerate(offers, 1):
+            print(f"\n{'='*60}")
+            print(f"Trying offer {idx}/{len(offers)}:")
+            print(f"  {offer['num_gpus']}x {offer['gpu_name']} "
+                  f"at {offer.get('geolocation', 'Unknown')} - "
+                  f"${offer.get('dph_total', 0):.2f}/hr")
+            print(f"{'='*60}")
+            
+            self.selected_offer = offer
+            
+            # Create instance
+            if not self.create_instance(offer, disk_size):
+                print(f"❌ Failed to create instance for offer {idx}")
+                continue
+            
+            # Wait for ready
+            if self.wait_for_ready(max_retries=10):
+                print(f"\n✅ Success with offer {idx}!")
+                return True
+            
+            # If we get here, instance failed to become ready
+            print(f"\n❌ Offer {idx} failed to become ready")
+            
+            # Terminate the failed instance
+            if self.instance_id:
+                print(f"🧹 Cleaning up failed instance {self.instance_id}...")
+                self.terminate_instance(confirm=False)
+            
+            # Reset state for next attempt
+            self.instance_id = None
+            self.ip = None
+            self.ssh_port = None
+            
+            # Small pause between attempts
+            if idx < len(offers):
+                print("\n⏳ Waiting 5 seconds before next attempt...")
+                time.sleep(5)
+        
+        print("\n❌ All offers failed")
+        return False
     
     def create_instance(
         self, 
@@ -310,7 +418,10 @@ class SimpleVastDeployer:
                 instance_info = json.loads(result.stdout)
                 
                 ports = instance_info.get("ports", {})
-                if ports:
+                status = instance_info.get("actual_status", "")
+                
+                # Check if instance is running and has ports
+                if ports and status == "running":
                     print(f"\n✅ Instance ready (attempt {attempt}/{max_retries})")
                     
                     self.ip = instance_info.get("public_ipaddr")
@@ -328,11 +439,16 @@ class SimpleVastDeployer:
                         
                         print(f"\n📋 Instance Details:")
                         print(f"   Label: {instance_info.get('label', 'N/A')}")
-                        print(f"   Status: {instance_info.get('actual_status', 'N/A')}")
+                        print(f"   Status: {status}")
                         return True
+                
+                # Check if instance failed
+                if status in ["error", "offline", "stopped"]:
+                    print(f"\n❌ Instance entered bad state: {status}")
+                    return False
                         
                 if attempt < max_retries:
-                    print(f"\r⏳ Attempt {attempt}/{max_retries}: Waiting for ports...", end="", flush=True)
+                    print(f"\r⏳ Attempt {attempt}/{max_retries}: Status: {status}, Waiting for ports...", end="", flush=True)
                     time.sleep(retry_interval)
                     
             except (subprocess.CalledProcessError, json.JSONDecodeError) as e:
@@ -445,7 +561,7 @@ def list_running_instances(label_prefix: str = None) -> List[Dict]:
 
 
 def show_running_instances():
-    """Show all running instances with simple-simple prefix"""
+    """Show all running instances with simple prefix"""
     instances = list_running_instances(label_prefix="simple")
     
     if not instances:
@@ -492,49 +608,45 @@ def main():
     filtered_offers = deployer.filter_offers(raw_offers)
     print(f"📊 Found {len(raw_offers)} raw offers, filtered to {len(filtered_offers)}")
     
-    selected = deployer.select_offer_interactive(filtered_offers)
-    if not selected:
+    # Select multiple offers with range support
+    selected_offers = deployer.select_offers_interactive(filtered_offers)
+    if not selected_offers:
         print("Selection cancelled")
         return
     
-    if not deployer.create_instance(selected, disk_size=100):
-        return
-    
-    if not deployer.wait_for_ready():
-        resp = input("\n❌ Instance failed to become ready. Terminate? (y/N): ").strip().lower()
-        if resp in ('y', 'yes'):
-            deployer.terminate_instance(confirm=False)
-        return
-    
-    # Step 6: Interactive menu
-    while True:
-        print("\n" + "="*50)
-        print("Options:")
-        print("1. SSH into instance")
-        print("2. Terminate instance")
-        print("3. Show connection info")
-        print("4. Exit (keep instance running)")
-        
-        choice = input("\nSelect option (1-4): ").strip()
-        
-        if choice == "1":
-            deployer.ssh_to_instance()
-        elif choice == "2":
-            if deployer.terminate_instance():
+    # Try offers sequentially
+    if deployer.try_offers_sequential(selected_offers, disk_size=100):
+        # Success! Show interactive menu
+        while True:
+            print("\n" + "="*50)
+            print("Options:")
+            print("1. SSH into instance")
+            print("2. Terminate instance")
+            print("3. Show connection info")
+            print("4. Exit (keep instance running)")
+            
+            choice = input("\nSelect option (1-4): ").strip()
+            
+            if choice == "1":
+                deployer.ssh_to_instance()
+            elif choice == "2":
+                if deployer.terminate_instance():
+                    break
+            elif choice == "3":
+                print(f"\n📡 Connection info:")
+                print(f"   Instance ID: {deployer.instance_id}")
+                print(f"   IP: {deployer.ip}")
+                print(f"   SSH Port: {deployer.ssh_port}")
+                print(f"   SSH command: ssh -p {deployer.ssh_port} root@{deployer.ip}")
+            elif choice == "4":
+                print("\n👋 Exiting. Instance is still running.")
+                print(f"To reconnect later: ssh -p {deployer.ssh_port} root@{deployer.ip}")
+                print(f"To terminate later: python {__file__} --terminate {deployer.instance_id}")
                 break
-        elif choice == "3":
-            print(f"\n📡 Connection info:")
-            print(f"   Instance ID: {deployer.instance_id}")
-            print(f"   IP: {deployer.ip}")
-            print(f"   SSH Port: {deployer.ssh_port}")
-            print(f"   SSH command: ssh -p {deployer.ssh_port} root@{deployer.ip}")
-        elif choice == "4":
-            print("\n👋 Exiting. Instance is still running.")
-            print(f"To reconnect later: ssh -p {deployer.ssh_port} root@{deployer.ip}")
-            print(f"To terminate later: python {__file__} --terminate {deployer.instance_id}")
-            break
-        else:
-            print("Invalid choice")
+            else:
+                print("Invalid choice")
+    else:
+        print("\n❌ Could not find a working instance among the selected offers.")
 
 
 if __name__ == "__main__":

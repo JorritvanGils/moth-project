@@ -5,3 +5,5 @@ Use Pytorch and hugging face transformers for Vision Transformers (ViT)
 Timm for managing advanced transformer architectures (Swin-b and MobileVit)-> https://huggingface.co/blog/timm-transformers
 The metric handler should create Training and validating graphs ideally of multiple models combined
 
+
+Advanced vision transformers .... They apply open-learning 'Unknown' to Muskito's. Can we use it for Moths too?

@@ -6,5 +6,6 @@ settings.json
 
 data/detection/*
 !data/detection/convert
+data/classification/*
 
 moth_project.egg-info

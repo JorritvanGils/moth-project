@@ -1,8 +1,8 @@
-experiment: classification   # detection | classification
+experiment: detection   # detection | classification
 
 detection:
   model_type: yolo # yolo | sam
-  data_path: /path/to/nid_det.yaml
+  data_path: /media/jorrit/ssd/phd/moth-project/configs/nid_det.yaml
 
   yolo:
     number: 8
@@ -12,7 +12,7 @@ detection:
     model_type: vit_h  # vit_h, vit_l, vit_b    
 
   params:
-    epochs: 50
+    epochs: 1
     imgsz: 640
     device: cpu
 

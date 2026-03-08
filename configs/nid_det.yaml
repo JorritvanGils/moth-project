@@ -1,0 +1,6 @@
+path: /media/jorrit/ssd/phd/moth-project/data/detection/nid_yolo
+train: images/train
+val: images/val
+
+names:
+  0: moth

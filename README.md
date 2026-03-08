@@ -8,6 +8,7 @@ rent gpu & ssh into
 git clone git@github.com:JorritvanGils/moth-project.git
 cd moth-project
 mkdir data/classification data/detection
+mkdir outputs/classification outputs/detection
 
 # Step 2) create venv
 sudo apt update && sudo apt upgrade -y
@@ -34,5 +35,7 @@ git clone git@github.com:cvjena/eu-moths-dataset.git
 
 # Step 5) Yolo inference
 
+
+python -m tasks.train
 
 

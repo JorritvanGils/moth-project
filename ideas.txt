@@ -7,3 +7,6 @@ The metric handler should create Training and validating graphs ideally of multi
 
 
 Advanced vision transformers .... They apply open-learning 'Unknown' to Muskito's. Can we use it for Moths too?
+
+
+explore nohub like option to let model training run in background whi. 

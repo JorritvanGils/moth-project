@@ -6,7 +6,7 @@ detection:
 
   yolo:
     number: 8
-    model_size: nano # nano, small, medium, large, xlarge
+    model_size: n # n=nano, s=small, m=medium, l=large, x=xlarge
 
   sam:
     model_type: vit_h  # vit_h, vit_l, vit_b    
@@ -15,6 +15,9 @@ detection:
     epochs: 1
     imgsz: 640
     device: cpu
+    # recommended:
+    # cpu: epochs: 1, imgsz: 640, device: cpu
+    # gpu: epochs: 20, imgsz: 640, device: 0
 
 classification:
   model_type: vit   # yolo | vit

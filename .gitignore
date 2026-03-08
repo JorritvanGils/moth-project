@@ -3,9 +3,13 @@
 __pycache__/
 *.pyc
 settings.json
+moth_project.egg-info
 
 data/detection/*
 !data/detection/convert
 data/classification/*
 
-moth_project.egg-info
+outputs/detection/*
+outputs/classification/*
+
+yolo*

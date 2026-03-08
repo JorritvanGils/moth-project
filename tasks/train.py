@@ -54,4 +54,4 @@ def run_experiment(config_path: str):
     print(f"Training complete. All results saved in {run_dir}")
 
 if __name__ == "__main__":
-    run_experiment("config.yaml")
+    run_experiment("configs/config.yaml")

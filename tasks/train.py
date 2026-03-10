@@ -4,6 +4,7 @@ import yaml
 from datetime import datetime
 from models.yolo_model import YOLOModel
 from models.vit_model import ViTModel
+from models.sam_model import SAMModel
 
 OUTPUT_ROOT = "/media/jorrit/ssd/phd/moth-project/outputs"
 
@@ -27,28 +28,50 @@ def make_run_dir(exp_type: str, model_type: str, model_size: str) -> str:
 def run_experiment(config_path: str):
     config = load_config(config_path)
     exp_type = config["experiment"]  # detection or classification
+
     exp_config = config[exp_type]
 
-    model_type = exp_config.get("model_type")
-    exp_config['experiment'] = exp_type
+    if exp_type == "detection":
+        model_type = exp_config.get("model_type")
+        exp_config['experiment'] = exp_type
 
-    # Determine model size
-    if model_type == "yolo":
-        model_size = exp_config.get("yolo", {}).get("model_size", "nano")
-    elif model_type == "vit":
-        model_size = exp_config.get("vit", {}).get("model_size", "base")
+        if model_type == "yolo":
+            model_size = exp_config.get("yolo", {}).get("model_size", "n")
+        elif model_type == "sam":
+            # TODO
+            # model_size = exp_config.get("vit", {}).get("model_size", "base")
+            pass
+        else:
+            raise ValueError(f"Unknown model_type: {model_type}")        
+
+        run_dir = make_run_dir(exp_type, model_type, model_size)
+        exp_config["output_path"] = run_dir  
+
+        if model_type == "yolo":
+            model = YOLOModel(exp_config)
+        elif model_type == "sam":
+            model = SAMModel(exp_config)
     else:
-        raise ValueError(f"Unknown model_type: {model_type}")
+        # CLASSIFICATION
+        # EU moth dataset
+        model_type = exp_config.get("model_type")
+        exp_config['experiment'] = exp_type
 
-    # Create unified output dir for this run
-    run_dir = make_run_dir(exp_type, model_type, model_size)
-    exp_config["output_path"] = run_dir  # override output_path for model
+        if model_type == "yolo":
+            model_size = exp_config.get("yolo", {}).get("model_size", "n")
+        elif model_type == "vit":
+            model_size = exp_config.get("vit", {}).get("model_size", "base")
+        else:
+            raise ValueError(f"Unknown model_type: {model_type}")        
 
-    # Initialize and train
-    if model_type == "yolo":
-        model = YOLOModel(exp_config)
-    elif model_type == "vit":
-        model = ViTModel(exp_config)
+        run_dir = make_run_dir(exp_type, model_type, model_size)
+        exp_config["output_path"] = run_dir 
+
+        if model_type == "yolo":
+            model = YOLOModel(exp_config)
+        elif model_type == "vit":
+            model = ViTModel(exp_config)        
+        pass
 
     model.train()
     print(f"Training complete. All results saved in {run_dir}")

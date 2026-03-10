@@ -2,14 +2,14 @@ experiment: detection   # detection | classification
 
 detection:
   model_type: yolo # yolo | sam
-  data_path: /media/jorrit/ssd/phd/moth-project/configs/nid_det.yaml
+  data_path: /media/jorrit/ssd/phd/moth-project/configs/nid_det.yaml # YAML
 
   yolo:
     number: 8
     model_size: n # n=nano, s=small, m=medium, l=large, x=xlarge
 
   sam:
-    model_type: vit_h  # vit_h, vit_l, vit_b    
+    model_type: vit_h  # vit_h  # vit_h, vit_l, vit_b # is this a mistake????
 
   params:
     epochs: 1
@@ -20,8 +20,8 @@ detection:
     # gpu: epochs: 20, imgsz: 640, device: 0
 
 classification:
-  model_type: vit   # yolo | vit
-  data_path: /path/to/eu_cls_folder
+  model_type: yolo   # yolo | vit
+  data_path: /path/to/eu_cls_folder # FOLDER
 
   params:
     epochs: 20
@@ -39,5 +39,5 @@ classification:
     model_size: nano # nano, small, medium, large, xlarge
 
   vit:
-    model_size: base  # base, large, huge
+    model_size: base  # base, large, huge  
     num_labels: 100  # number of classes

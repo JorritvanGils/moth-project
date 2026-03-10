@@ -22,25 +22,27 @@ class YOLOModel(BaseModel):
     def _get_pretrained_path(self) -> str:
         number = self.config.get("yolo", {}).get("number", 8)
         model_size = self.config.get("yolo", {}).get("model_size", "nano")
-        suffix = "-cls.pt" if self.config.get("experiment") == "classification" else ".pt"
+
+        if self.config.get("experiment") == "classification":
+            suffix = "-cls.pt" 
+        else:
+            suffix = ".pt"
+            
         return f"yolov{number}{model_size}{suffix}"
 
     def train(self):
         train_params = self.config.get("params", {})
 
-        # Ensure all outputs go into the unified run folder
         run_dir = self.config["output_path"]
         os.makedirs(run_dir, exist_ok=True)
 
-        # YOLO will write results inside this folder
         self.model.train(
             data=self.config["data_path"],
             project=run_dir,
-            name="run",  # YOLO will create run/ folder inside project
+            name="run",
             **train_params
         )
 
-        # Move everything from YOLO's internal run/ folder into run_dir
         internal_run_dir = os.path.join(run_dir, "run")
         for fname in os.listdir(internal_run_dir):
             os.rename(
@@ -53,4 +55,9 @@ class YOLOModel(BaseModel):
         return self.model.val()
 
     def predict(self, source, **kwargs):
+        # If its true that this section would be used for inference, how would it work?
+        # we currently have: train.py
+        # do we then need predict.py?
+        # - so it should know which model that is/was
+        # - it should know on which image(s) it should predict on
         return self.model.predict(source, **kwargs)

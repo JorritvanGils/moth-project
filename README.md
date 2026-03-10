@@ -31,7 +31,7 @@ git clone git@github.com:cvjena/nid-dataset.git nid
 # python scripts/nid_to_yolo.py
 
 cd ../../classification
-git clone git@github.com:cvjena/eu-moths-dataset.git
+git clone git@github.com:cvjena/eu-moths-dataset.git eu
 
 # Step 5) Yolo inference
 

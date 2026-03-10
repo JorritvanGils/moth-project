@@ -8,7 +8,6 @@ class SAMModel(BaseModel):
         """
         config should contain:
         - sam:
-            - model_type: "vit_h" | "vit_l" | "vit_b"  # SAM variants
         - data_path: path to images
         - output_path: unified run directory
         - params: dict for training/inference (optional)

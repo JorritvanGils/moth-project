@@ -1,3 +1,32 @@
 https://chatgpt.com/c/699dc2cb-6db8-832b-8dab-0652377395a7 <- folder structure
 Advanced vision transformers .... They apply open-learning 'Unknown' to Muskito's. Can we use it for Moths too?
 explore nohub like option to let model training run in background whi. 
+
+
+
+What are the levels that we have moth information of?
+eu dataset has for example 200 species. 
+eustroma_reticulata
+geometra_papilionaria
+gymnoscelis_rufifasciata
+habrosyne_pyritoides
+hada_plebeja
+hemithea_aestivaria
+herminia_grisealis
+herminia_tarsicrinalis
+herminia_tarsipennalis
+hoplodrina_octogenaria
+horisme_tersata
+hydriomena_impluviata
+hylaea_fasciaria
+What would it mean if we would instead create classifier on order level, would we then group all the for example 'herminia_'
+apparently it coleoptra, Lepidoptra etc. 
+
+So if orderlevel is 'moths' then what are the options that there are in between untill you reach species that you could also build a classifier on.
+Because 'moths' is of course to generic because they are all moths, but species might be too specific/too ambitious at the start. 
+
+Order
+Family 
+species
+
+So can we make a moth classifier for moth families?

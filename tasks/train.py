@@ -3,8 +3,8 @@ import os
 import yaml
 from datetime import datetime
 from models.yolo_model import YOLOModel
-from models.vit_model import ViTModel
-from models.sam_model import SAMModel
+from models.classification.vit_model import ViTModel
+from models.detection.sam_model import SAMModel
 
 OUTPUT_ROOT = "/media/jorrit/ssd/phd/moth-project/outputs"
 

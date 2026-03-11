@@ -52,6 +52,17 @@ class YOLOModel(BaseModel):
         os.rmdir(internal_run_dir)  # clean up
 
     def evaluate(self):
+        # How can this be used? 
+        # Should we in tasks/train.py then also later run method .evaluate()
+        # do we then get access to all evaluation data stored in variables?
+        # can we get these metrics programatically?
+        # accuracy, 
+        # precision, 
+        # recall, 
+        # F1-score, 
+        # Receiver Operating Characteristic (ROC) curve
+        # confusion matrix    
+        # And then later for ViT also get similar results. 
         return self.model.val()
 
     def predict(self, source, **kwargs):

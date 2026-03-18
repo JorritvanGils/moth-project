@@ -41,7 +41,7 @@ python -m tasks.train
  -->
 
 
-```markdown
+
 # Moth Project Setup
 
 ## 0. (Optional) Rent a GPU
@@ -128,5 +128,4 @@ git clone git@github.com:cvjena/eu-moths-dataset.git eu
 
 ```bash
 python -m tasks.train
-```
 ```

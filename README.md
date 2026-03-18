@@ -1,6 +1,6 @@
 # Moth Project Setup
 
-## 0. (Optional) Rent a GPU
+## 0. (Optional) Rent a GPU (code not shared)
 
 ```bash
 git clone git@github.com:JorritvanGils/moth-project.git

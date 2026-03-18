@@ -70,8 +70,8 @@ mkdir -p datasets/det && cd datasets/det
 
 git clone git@github.com:cvjena/nid-dataset.git nid
 
-# Optional conversion
-# python scripts/nid_to_yolo.py
+# nav back to 'moths'
+# python tasks/nid_to_yolo.py
 ```
 
 ### Classification

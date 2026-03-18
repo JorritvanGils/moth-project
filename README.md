@@ -1,47 +1,3 @@
-<!-- # Step 0) Optionally: Rent GPU
-git clone git@github.com:JorritvanGils/moth-project.git
-Go to vast.ai and copy the accounts api key into .env at project root
-python gpu/vast.py
-rent gpu & ssh into
-
-# Step 1)
-git clone git@github.com:JorritvanGils/moth-project.git
-cd moth-project
-mkdir data/classification data/detection
-mkdir outputs/classification outputs/detection
-
-# Step 2) create venv
-sudo apt update && sudo apt upgrade -y
-apt install python3-venv -y && \
-apt install software-properties-common -y && \
-add-apt-repository ppa:deadsnakes/ppa -y && \
-apt install python3.10 python3.10-venv -y && \
-python3.10 -m venv .venv
-source .venv/bin/activate
-
-# Step 3) Install dependencies
-cd /media/jorrit/ssd/phd/moth-project
-pip install -e .
-# pip install -r requirements.txt
-# pip install ultralytics
-
-# Step 4) download datasets:
-cd data/detection
-git clone git@github.com:cvjena/nid-dataset.git nid
-# python scripts/nid_to_yolo.py
-
-cd ../../classification
-git clone git@github.com:cvjena/eu-moths-dataset.git eu
-
-# Step 5) Yolo inference
-
-
-python -m tasks.train
-
- -->
-
-
-
 # Moth Project Setup
 
 ## 0. (Optional) Rent a GPU
@@ -56,6 +12,9 @@ git clone git@github.com:JorritvanGils/moth-project.git
 
 ```bash
 python gpu/vast.py
+ssh-add -l
+# use Proxy ssh connect and add -A, like:
+ssh -A -p 37018 root@ssh7.vast.ai -L 8080:localhost:8080
 ```
 
 Rent a GPU and SSH into it.
@@ -65,11 +24,12 @@ Rent a GPU and SSH into it.
 ## 1. Project Setup
 
 ```bash
-git clone git@github.com:JorritvanGils/moth-project.git
-cd moth-project
+git clone git@github.com:JorritvanGils/moth-project.git moths
+cd moths
+mkdir -p outputs/cls outputs/det # should be handled by the script
 
-mkdir -p data/classification data/detection
-mkdir -p outputs/classification outputs/detection
+
+
 ```
 
 ---
@@ -94,7 +54,7 @@ source .venv/bin/activate
 ## 3. Install Dependencies
 
 ```bash
-cd /media/jorrit/ssd/phd/moth-project
+cd /media/jorrit/ssd/phd/moths
 
 pip install -e .
 # pip install -r requirements.txt
@@ -108,7 +68,10 @@ pip install -e .
 ### Detection
 
 ```bash
-cd data/detection
+cd moths & cd .. # go out of the moths project
+mkdir -p datasets/cls datasets/det
+
+cd datasets/det
 git clone git@github.com:cvjena/nid-dataset.git nid
 
 # Optional conversion
@@ -118,7 +81,7 @@ git clone git@github.com:cvjena/nid-dataset.git nid
 ### Classification
 
 ```bash
-cd ../../classification
+cd ../../cls
 git clone git@github.com:cvjena/eu-moths-dataset.git eu
 ```
 

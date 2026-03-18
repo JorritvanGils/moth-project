@@ -5,11 +5,7 @@ __pycache__/
 settings.json
 moth_project.egg-info
 
-data/detection/*
-!data/detection/convert
-data/classification/*
-
-outputs/detection/*
-outputs/classification/*
+outputs/det/*
+outputs/cls/*
 
 yolo*

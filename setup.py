@@ -16,5 +16,7 @@ setup(
         "torchvision",
         "datasets",   
         "scikit-learn",
+        # SAM:
+        "segment-anything",
     ],
 )

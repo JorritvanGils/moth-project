@@ -1,3 +1,4 @@
 from .base_model import BaseModel
 from .yolo_model import YOLOModel
-from .classification.vit_model import ViTModel  # if you have one
+from .cls.vit_model import ViTModel 
+from .det.sam_model import SAMModel 

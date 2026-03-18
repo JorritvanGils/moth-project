@@ -1,5 +1,4 @@
-# path: /media/jorrit/ssd/phd/moth-project/data/detection/nid_yolo
-path: /media/jorrit/ssd/phd/moth-project/datasets/det/nid_yolo
+path: /media/jorrit/ssd/phd/datasets/det/nid_yolo
 train: images/train
 val: images/val
 

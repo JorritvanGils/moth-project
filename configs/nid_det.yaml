@@ -1,4 +1,5 @@
-path: /media/jorrit/ssd/phd/datasets/det/nid_yolo
+# path: /media/jorrit/ssd/phd/datasets/det/nid_yolo
+path: /root/datasets/det/nid_yolo
 train: images/train
 val: images/val
 

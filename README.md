@@ -54,11 +54,8 @@ source .venv/bin/activate
 ## 3. Install Dependencies
 
 ```bash
-cd /media/jorrit/ssd/phd/moths
-
+# from project root run:
 pip install -e .
-# pip install -r requirements.txt
-# pip install ultralytics
 ```
 
 ---
@@ -68,10 +65,9 @@ pip install -e .
 ### Detection
 
 ```bash
-cd moths & cd .. # go out of the moths project
-mkdir -p datasets/cls datasets/det
+cd .. # nav out of 'moths' project
+mkdir -p datasets/det && cd datasets/det
 
-cd datasets/det
 git clone git@github.com:cvjena/nid-dataset.git nid
 
 # Optional conversion
@@ -81,6 +77,8 @@ git clone git@github.com:cvjena/nid-dataset.git nid
 ### Classification
 
 ```bash
+cd datasets
+mkdir -p datasets/cls
 cd ../../cls
 git clone git@github.com:cvjena/eu-moths-dataset.git eu
 ```

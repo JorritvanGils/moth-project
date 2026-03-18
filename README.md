@@ -83,9 +83,26 @@ git clone git@github.com:cvjena/eu-moths-dataset.git eu
 
 ---
 
-## 5. Train YOLO
+## 5. Configure your config.yml
+```bash
+nano configs/config.yaml
+# det/cls
+# model_type
+# params
+```
+
+## 6. Train
 
 ```bash
 python -m tasks.train
 # /root/moths/outputs/detection/003_20260318_yolo_n
 ```
+
+## 7. Store output on local machine
+
+```bash
+cd /media/jorrit/ssd/phd/outputs && scp -P 37018 root@ssh7.vast.ai:/root/moths/outputs/detection/003_20260318_yolo_n/weights/best.pt .
+cd /media/jorrit/ssd/phd/outputs && scp -r -P 37018 root@ssh7.vast.ai:/root/moths/outputs/detection/003_20260318_yolo_n .
+```
+
+ssh -A -p 37018 root@ssh7.vast.ai -L 8080:localhost:8080

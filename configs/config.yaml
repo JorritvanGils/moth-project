@@ -13,12 +13,13 @@ det:
     model_type: vit_h  # vit_h  # vit_h, vit_l, vit_b # is this a mistake????
 
   params:
+    device: cpu  
     epochs: 1
     imgsz: 640
-    device: cpu
+
     # recommended:
-    # cpu: epochs: 1, imgsz: 640, device: cpu
-    # gpu: epochs: 20, imgsz: 640, device: 0
+    # cpu: device: cpu, epochs: 1, imgsz: 640
+    # gpu: device: 0, epochs: 20, imgsz: 640
 
 cls:
   model_type: yolo   # yolo | vit

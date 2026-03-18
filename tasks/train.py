@@ -32,7 +32,7 @@ def run_experiment(config_path: str):
 
     exp_config = config[exp_type]
 
-    if exp_type == "detection":
+    if exp_type == "det":
         model_type = exp_config.get("model_type")
         exp_config['experiment'] = exp_type
 

@@ -10,7 +10,8 @@ git clone git@github.com:JorritvanGils/moth-project.git
 2. Copy your account API key into `.env` at the project root  
 3. Run:
 
-```bash
+```bash 
+# TODO FIX THAT IT AUTO SSHS INTO IT. WNOW IT SAID SSH WASNT AVAILABLE WHILE IT WORKED WITH THE SECOND LINK
 python gpu/vast.py
 ssh-add -l
 # use Proxy ssh connect and add -A, like:
@@ -86,4 +87,5 @@ git clone git@github.com:cvjena/eu-moths-dataset.git eu
 
 ```bash
 python -m tasks.train
+# /root/moths/outputs/detection/003_20260318_yolo_n
 ```

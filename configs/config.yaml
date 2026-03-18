@@ -1,6 +1,6 @@
-experiment: detection   # detection | classification
+experiment: det   # det(ection) | cls(assification) 
 
-detection:
+det:
   model_type: yolo # yolo | sam
   # data_path: /media/jorrit/ssd/phd/moths/configs/nid_det.yaml # YAML
   data_path: /root/moths/configs/nid_det.yaml # YAML
@@ -20,7 +20,7 @@ detection:
     # cpu: epochs: 1, imgsz: 640, device: cpu
     # gpu: epochs: 20, imgsz: 640, device: 0
 
-classification:
+cls:
   model_type: yolo   # yolo | vit
   data_path: /path/to/eu_cls_folder # FOLDER
 

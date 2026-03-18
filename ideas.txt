@@ -2,7 +2,7 @@ https://chatgpt.com/c/699dc2cb-6db8-832b-8dab-0652377395a7 <- folder structure
 Advanced vision transformers .... They apply open-learning 'Unknown' to Muskito's. Can we use it for Moths too?
 explore nohub like option to let model training run in background whi. 
 
-
+you can consider ansible for the readme steps, then you have all datasets etc automatically. 
 
 What are the levels that we have moth information of?
 eu dataset has for example 200 species. 

@@ -6,7 +6,8 @@ from models.yolo_model import YOLOModel
 from models.cls.vit_model import ViTModel
 from models.det.sam_model import SAMModel
 
-OUTPUT_ROOT = "/media/jorrit/ssd/phd/moths/outputs"
+# OUTPUT_ROOT = "/media/jorrit/ssd/phd/moths/outputs"
+OUTPUT_ROOT = os.path.expanduser("~/moths/outputs") 
 
 def load_config(path: str) -> dict:
     with open(path, "r") as f:

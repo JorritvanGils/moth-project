@@ -2,7 +2,8 @@ experiment: detection   # detection | classification
 
 detection:
   model_type: yolo # yolo | sam
-  data_path: /media/jorrit/ssd/phd/moth-project/configs/nid_det.yaml # YAML
+  # data_path: /media/jorrit/ssd/phd/moths/configs/nid_det.yaml # YAML
+  data_path: ~/moths/configs/nid_det.yaml # YAML
 
   yolo:
     number: 8

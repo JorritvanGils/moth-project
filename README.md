@@ -65,21 +65,18 @@ pip install -e .
 ### Detection
 
 ```bash
-cd .. # nav out of 'moths' project
+cd ~ # nav out of 'moths' project
 mkdir -p datasets/det && cd datasets/det
-
 git clone git@github.com:cvjena/nid-dataset.git nid
 
-# nav back to 'moths'
-# python tasks/nid_to_yolo.py
+cd ~/moths
+python tasks/nid_to_yolo.py
 ```
 
 ### Classification
 
 ```bash
-cd datasets
-mkdir -p datasets/cls
-cd ../../cls
+mkdir -p ~/datasets/cls && cd ~/datasets/cls
 git clone git@github.com:cvjena/eu-moths-dataset.git eu
 ```
 

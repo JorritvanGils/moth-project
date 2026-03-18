@@ -3,7 +3,7 @@ import shutil
 from pathlib import Path
 
 DETECTION_DIR = Path(__file__).resolve().parents[2] / "datasets" / "det"
-print(f"DETECTION_DIR: {DETECTION_DIR}")   
+# print(f"DETECTION_DIR: {DETECTION_DIR}")   
 SOURCE_DIR = DETECTION_DIR / "nid" 
 DEST_DIR = DETECTION_DIR / "nid_yolo"
 

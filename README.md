@@ -41,77 +41,92 @@ python -m tasks.train
  -->
 
 
-# Moth Project
+```markdown
+# Moth Project Setup
 
-This repository contains the pipeline for moth detection and classification using YOLO.
+## 0. (Optional) Rent a GPU
 
-## 🚀 Getting Started
+```bash
+git clone git@github.com:JorritvanGils/moth-project.git
+```
 
-### Step 0: GPU Provisioning (Optional)
-If you require external compute, follow these steps to rent a GPU via Vast.ai:
+1. Go to Vast.ai  
+2. Copy your account API key into `.env` at the project root  
+3. Run:
 
-1. Clone the repository:
-   git clone git@github.com:JorritvanGils/moth-project.git
-   cd moth-project
-2. Setup API Key: Add your Vast.ai API key into a .env file at the project root.
-3. Provision the instance:
-   python gpu/vast.py
-4. Access: SSH into the rented instance to continue.
+```bash
+python gpu/vast.py
+```
+
+Rent a GPU and SSH into it.
 
 ---
 
-## 🛠️ Installation & Setup
+## 1. Project Setup
 
-### 1. Project Structure
-Clone the repository and initialize the necessary directories for data and outputs:
-
+```bash
 git clone git@github.com:JorritvanGils/moth-project.git
 cd moth-project
+
 mkdir -p data/classification data/detection
 mkdir -p outputs/classification outputs/detection
+```
 
-### 2. Environment Setup
-Update the system and install Python 3.10:
+---
 
+## 2. Create Python Environment
+
+```bash
 sudo apt update && sudo apt upgrade -y
+
+sudo apt install python3-venv -y
 sudo apt install software-properties-common -y
+
 sudo add-apt-repository ppa:deadsnakes/ppa -y
 sudo apt install python3.10 python3.10-venv -y
 
-# Create and activate virtual environment
 python3.10 -m venv .venv
 source .venv/bin/activate
+```
 
-### 3. Install Dependencies
-Install the project in editable mode to ensure all modules are accessible:
+---
+
+## 3. Install Dependencies
+
+```bash
+cd /media/jorrit/ssd/phd/moth-project
 
 pip install -e .
-# Optional: pip install -r requirements.txt
-# Optional: pip install ultralytics
+# pip install -r requirements.txt
+# pip install ultralytics
+```
 
 ---
 
-## 📊 Data Preparation
+## 4. Download Datasets
 
-### Detection Dataset
-Download the NID Dataset for object detection:
+### Detection
 
+```bash
 cd data/detection
 git clone git@github.com:cvjena/nid-dataset.git nid
+
+# Optional conversion
 # python scripts/nid_to_yolo.py
-cd ../..
+```
 
-### Classification Dataset
-Download the EU-Moths Dataset for classification:
+### Classification
 
-cd data/classification
+```bash
+cd ../../classification
 git clone git@github.com:cvjena/eu-moths-dataset.git eu
-cd ../..
+```
 
 ---
 
-## 🚂 Training & Inference
+## 5. Train YOLO
 
-To initiate the training pipeline, run the following command:
-
+```bash
 python -m tasks.train
+```
+```

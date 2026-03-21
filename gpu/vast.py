@@ -829,3 +829,13 @@ if __name__ == "__main__":
 # turns out vast.py only tries the first,.
 # apparently this one wasn't woring but the second one did. 
 # can we solve this by letting the script trying both?
+
+
+# deepseek
+# Currently we can only get to see our menu with the (ansible) options.
+# after choosing a gpu. While sometimes we already have a gpu ready. But then we also want 
+# to be able to see that menu and select the ansible options for that already spunn up machine. 
+# in fact as we're only needing 1 gpu, if there is one ready we actually don't need to also show 
+# the suggestion to spinn up a new one and show the available gpu's. Does that make sense?
+
+# Maybe only 3090 and show 30 results and  also allow for setting a min bandwidth (now we had 100). 

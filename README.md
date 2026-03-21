@@ -1,6 +1,6 @@
 # Moth Project Setup
 
-## 0. (Optional) Rent a GPU (code not shared)
+## 0. (Optional) Rent a GPU and automate installation Ansible
 
 ```bash
 git clone git@github.com:JorritvanGils/moth-project.git
@@ -8,17 +8,28 @@ git clone git@github.com:JorritvanGils/moth-project.git
 
 1. Go to Vast.ai  
 2. Copy your account API key into `.env` at the project root  
-3. Run:
-
-```bash 
-# TODO FIX THAT IT AUTO SSHS INTO IT. WNOW IT SAID SSH WASNT AVAILABLE WHILE IT WORKED WITH THE SECOND LINK
-python gpu/vast.py
+3. set-up ssh key and verify with 
+```bash
 ssh-add -l
+```
+4. Run:
+```bash 
+python gpu/vast.py
+
+
+
+For automated Ansible installation (doing steps 1 - 7 below) choose:
+run setup_moth_project.yml playbook
+
+For manual installation run the commands below: 
+
 # use Proxy ssh connect and add -A, like:
 ssh -A -p 37018 root@ssh7.vast.ai -L 8080:localhost:8080
 ```
 
 Rent a GPU and SSH into it.
+
+
 
 ---
 

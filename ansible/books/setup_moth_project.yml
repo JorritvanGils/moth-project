@@ -9,96 +9,96 @@
     python_version: "3.10"
     
   tasks:
-    # - name: Update apt cache
-    #   apt:
-    #     update_cache: yes
-    #     cache_valid_time: 3600
-    #   become: yes
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+      become: yes
 
-    # - name: Upgrade all packages
-    #   apt:
-    #     upgrade: dist
-    #   become: yes
+    - name: Upgrade all packages
+      apt:
+        upgrade: dist
+      become: yes
 
-    # - name: Install basic dependencies
-    #   apt:
-    #     name:
-    #       - git
-    #       - python3-venv
-    #       - software-properties-common
-    #       - python3-pip
-    #       - build-essential
-    #       - rsync
-    #     state: present
-    #   become: yes
+    - name: Install basic dependencies
+      apt:
+        name:
+          - git
+          - python3-venv
+          - software-properties-common
+          - python3-pip
+          - build-essential
+          - rsync
+        state: present
+      become: yes
 
-    # - name: Add deadsnakes PPA for Python 3.10
-    #   apt_repository:
-    #     repo: ppa:deadsnakes/ppa
-    #     state: present
-    #   become: yes
+    - name: Add deadsnakes PPA for Python 3.10
+      apt_repository:
+        repo: ppa:deadsnakes/ppa
+        state: present
+      become: yes
 
-    # - name: Install Python 3.10
-    #   apt:
-    #     name:
-    #       - python3.10
-    #       - python3.10-venv
-    #       - python3.10-dev
-    #     state: present
-    #     update_cache: yes
-    #   become: yes
+    - name: Install Python 3.10
+      apt:
+        name:
+          - python3.10
+          - python3.10-venv
+          - python3.10-dev
+        state: present
+        update_cache: yes
+      become: yes
 
-    # - name: Clone moth project repository
-    #   git:
-    #     repo: "{{ project_repo }}"
-    #     dest: "{{ project_dir }}"
-    #     accept_hostkey: yes
-    #     # key_file: /root/.ssh/id_rsa
-    #   # ignore_errors: yes
-    #   register: git_result
+    - name: Clone moth project repository
+      git:
+        repo: "{{ project_repo }}"
+        dest: "{{ project_dir }}"
+        accept_hostkey: yes
+        # key_file: /root/.ssh/id_rsa
+      # ignore_errors: yes
+      register: git_result
 
-    # - name: Show git clone result
-    #   debug:
-    #     msg: "Repository cloned successfully"
-    #   when: git_result is success
+    - name: Show git clone result
+      debug:
+        msg: "Repository cloned successfully"
+      when: git_result is success
 
-    # - name: Create output directories
-    #   file:
-    #     path: "{{ item }}"
-    #     state: directory
-    #     mode: '0755'
-    #   loop:
-    #     - "{{ project_dir }}/outputs/cls"
-    #     - "{{ project_dir }}/outputs/det"
+    - name: Create output directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        mode: '0755'
+      loop:
+        - "{{ project_dir }}/outputs/cls"
+        - "{{ project_dir }}/outputs/det"
 
-    # - name: Create Python virtual environment
-    #   command:
-    #     cmd: python3.10 -m venv .venv
-    #     chdir: "{{ project_dir }}"
-    #     creates: "{{ project_dir }}/.venv"
+    - name: Create Python virtual environment
+      command:
+        cmd: python3.10 -m venv .venv
+        chdir: "{{ project_dir }}"
+        creates: "{{ project_dir }}/.venv"
 
-    # - name: Upgrade pip in virtual environment
-    #   pip:
-    #     name: pip
-    #     state: latest
-    #     virtualenv: "{{ project_dir }}/.venv"
-    #     virtualenv_python: python3.10
+    - name: Upgrade pip in virtual environment
+      pip:
+        name: pip
+        state: latest
+        virtualenv: "{{ project_dir }}/.venv"
+        virtualenv_python: python3.10
 
-    # - name: Install project in development mode
-    #   pip:
-    #     name: "{{ project_dir }}"
-    #     state: present
-    #     virtualenv: "{{ project_dir }}/.venv"
-    #     editable: yes
+    - name: Install project in development mode
+      pip:
+        name: "{{ project_dir }}"
+        state: present
+        virtualenv: "{{ project_dir }}/.venv"
+        editable: yes
 
-    # - name: Create datasets directory structure
-    #   file:
-    #     path: "{{ item }}"
-    #     state: directory
-    #     mode: '0755'
-    #   loop:
-    #     - "{{ datasets_dir }}/det"
-    #     - "{{ datasets_dir }}/cls"
+    - name: Create datasets directory structure
+      file:
+        path: "{{ item }}"
+        state: directory
+        mode: '0755'
+      loop:
+        - "{{ datasets_dir }}/det"
+        - "{{ datasets_dir }}/cls"
 
     - name: Clone detection dataset (NID)
       git:

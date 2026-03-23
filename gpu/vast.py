@@ -56,7 +56,7 @@ class SimpleVastDeployer:
     def fetch_available_gpus(
         self,
         num_gpus: int = 1,
-        min_download: int = 300, # CHANGE IF NEEDED
+        min_download: int = 200, # CHANGE IF NEEDED
         limit: int = 50
     ) -> List[Dict]:
         """
@@ -313,10 +313,10 @@ class SimpleVastDeployer:
             self.ip = None
             self.ssh_port = None
             
-            # Small pause between attempts
-            if idx < len(offers):
-                print("\n⏳ Waiting 5 seconds before next attempt...")
-                time.sleep(5)
+            # # Small pause between attempts
+            # if idx < len(offers):
+            #     print("\n⏳ Waiting 5 seconds before next attempt...")
+            #     time.sleep(5)
         
         print("\n❌ All offers failed")
         return False

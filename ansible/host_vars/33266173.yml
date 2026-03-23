@@ -1,0 +1,11 @@
+---
+    # Host variables for instance 33266173
+    ansible_host: ssh7.vast.ai
+    ansible_port: 26172
+    ansible_user: root
+    instance_id: 33266173
+    gpu_name: RTX 3090
+    gpu_count: 1
+    location: Ukraine, UA
+    ssh_command: ssh -p 26172 root@ssh7.vast.ai
+    

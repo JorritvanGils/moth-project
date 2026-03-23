@@ -1,0 +1,164 @@
+- hosts: "miners"
+  become: yes
+
+  tasks:
+    - name: Set playbook variables as facts
+      set_fact:
+        netuid: "3" 
+
+    - name: Start and print ssh cmd
+      debug:
+        msg: "ssh -A root@{{ ip }} -p {{ ssh_port }}"
+
+    - name: Update and upgrade apt packages
+      apt:
+        update_cache: yes
+        upgrade: dist
+        cache_valid_time: 3600
+
+    - name: Install system dependencies
+      apt:
+        pkg:
+          - nano
+          - git
+          - python3-pip
+          - jq
+          - npm
+        state: present
+
+    - name: Install PM2 globally via npm
+      community.general.npm:
+        name: pm2
+        global: yes
+        state: present
+
+    - name: Ensure PM2 is updated
+      shell: pm2 update
+      register: pm2_update_result
+      changed_when: "'already up to date' not in pm2_update_result.stdout"        
+
+    - name: Clone repo
+      git:
+        repo: "git@github.com:JorritvanGils/templar2.git"
+        dest: /root/templar2
+        version: "main"
+        update: yes
+        accept_hostkey: yes
+
+    - name: Copy real .env file to remote
+      copy:
+        src: /media/jorrit/ssd/bittensor/3_templar/.env
+        dest: /root/templar2/.env
+        owner: root
+        group: root
+        mode: '0644'
+
+    # - name: Add templar .env using template
+    #   template:
+    #     src: ../envs/templar_env.j2
+    #     dest: /root/templar2/.env
+    #     owner: root
+    #     group: root
+    #     mode: '0644'
+
+    - name: Install uv and Python 3.11
+      shell: |
+        pip install uv
+        uv python install 3.11
+        uv python pin 3.11
+      args:
+        executable: /bin/bash
+
+    - name: Create virtual environment
+      shell: |
+        uv venv /root/templar2/.venv
+      args:
+        executable: /bin/bash
+
+    - name: Install PyTorch with CUDA 11.8 support
+      shell: |
+        uv pip install torch --index-url https://download.pytorch.org/whl/cu118
+      args:
+        chdir: /root/templar2
+        executable: /bin/bash
+      environment:
+        VIRTUAL_ENV: "/root/templar2/.venv" # Tells uv which venv to use
+
+    - name: Install local repository in editable mode
+      shell: |
+        uv pip install -e .
+      args:
+        chdir: /root/templar2
+        executable: /bin/bash
+      environment:
+        VIRTUAL_ENV: "/root/templar2/.venv"
+
+    - name: Login to Weights & Biases
+      command: /root/templar2/.venv/bin/wandb login "{{ lookup('ansible.builtin.env', 'WANDB_KEY') }}"
+
+    - name: Install bittensor-cli using uv
+      shell: |
+        source /root/templar2/.venv/bin/activate
+        uv pip install bittensor-cli
+      args:
+        executable: /bin/bash
+
+    # Should then moved to after uv repo install
+    - name: Regenerate coldkeypub
+      command: >
+        /root/templar2/.venv/bin/btcli w regen_coldkeypub
+        --ss58 {{ lookup('ansible.builtin.env', 'M_WALL3_SS58') }}
+        --wallet.name {{ lookup('ansible.builtin.env', 'M_WALL3_NAME') }}
+        --wallet-path /root/.bittensor/wallets/
+      args:
+        creates: /root/.bittensor/wallets/{{ wallet_name }}/coldkeypub
+
+    - name: Regenerate hotkey
+      command: >
+        /root/templar2/.venv/bin/btcli w regen_hotkey
+        --mnemonic "{{ lookup('ansible.builtin.env', 'HOTKEY_3_01') }}"
+        --wallet.name {{ lookup('ansible.builtin.env', 'M_WALL3_NAME') }}
+        --wallet.hotkey 01_key
+        --wallet-path /root/.bittensor/wallets/
+      args:
+        creates: /root/.bittensor/wallets/{{ lookup('ansible.builtin.env', 'M_WALL3_NAME') }}/hotkey
+
+    - name: Configure bashrc for auto venv activation, cd into repo, and aliases
+      blockinfile:
+        path: /root/.bashrc
+        create: yes
+        marker: "# {mark} D_TRAINING SETUP"
+        block: |
+          cd /root/templar2 2>/dev/null || true
+          source /root/templar2/.venv/bin/activate 2>/dev/null || true
+
+          # echo "{{ netuid }}_{{ miner_uid }}_{{ machine }}_{{ provider }}"
+
+          alias S="source ~/.bashrc"
+          alias B="nano +9999 ~/.bashrc"
+          # alias L="less +F -R /root/.pm2/logs/distributed-training-miner-out.log"
+          alias L="tail -n 500 -F /root/.pm2/logs/distributed-training-miner-out.log"
+          alias P="pm2 log --lines 500"
+          alias G="git branch -vv"
+          alias Z="grep -E '^alias (S|B|L|P|G)=' ~/.bashrc"         
+
+    - name: Source .env
+      shell: |
+        set -a
+        source /root/templar2/.env
+        set +a
+      args:
+        executable: /bin/bash
+
+    - name: Start and print ssh cmd
+      debug:
+        msg: "ssh -A root@{{ ip }} -p {{ ssh_port }}"
+
+    - name: Install specific bittensor version via uv
+      shell: |
+        uv pip install bittensor==9.12.0
+      args:
+        chdir: /root/templar2
+        executable: /bin/bash
+      environment:
+        VIRTUAL_ENV: "/root/templar2/.venv"        

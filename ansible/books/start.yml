@@ -1,0 +1,294 @@
+- hosts: "miners"
+  become: yes
+
+  tasks:
+
+    - block:
+        - name: Source .env
+          shell: |
+            set -a
+            source /root/d_training/.env
+            set +a
+          args:
+            executable: /bin/bash
+
+        - name: Ensure R2 bucket exists and is empty
+          delegate_to: localhost
+          run_once: true
+          become: no
+          shell: |
+            ENDPOINT="https://{{ lookup('ansible.builtin.env', 'R2_ACCOUNT_ID') }}.r2.cloudflarestorage.com"
+            {% if role == 'validator' %}
+            BUCKET="{{ miner_flags.model_name }}"
+            {% else %}
+            BUCKET="{{ miner_flags.model_name }}-{{ miner_uid }}"
+            {% endif %}
+
+            if aws s3api head-bucket --bucket "$BUCKET" --endpoint-url="$ENDPOINT" 2>/dev/null; then
+              echo "Bucket exists: $BUCKET"
+              if aws s3 ls "s3://$BUCKET" --endpoint-url="$ENDPOINT" | grep -q .; then
+                echo "Bucket contains files, removing..."
+                aws s3 rm "s3://$BUCKET" --recursive --endpoint-url="$ENDPOINT"
+              else
+                echo "Bucket empty, nothing to remove."
+              fi
+            else
+              echo "Bucket does not exist, creating..."
+              aws s3api create-bucket --bucket "$BUCKET" --endpoint-url="$ENDPOINT"
+            fi
+
+        # Might disable this later!
+        - name: Reset local changes in repo
+          command: git reset --hard HEAD
+          args:
+            chdir: /root/d_training
+          when: network == 'test'
+
+        - name: Update repo
+          block:
+            - name: Update repository
+              git:
+                repo: "{{ repo }}"
+                dest: /root/d_training
+                version: "{{ branch }}"
+                update: yes
+                accept_hostkey: yes
+          rescue:
+            - debug:
+                msg: "Local changes exist in /root/d_training, skipping git update. Miner can still run."
+
+        - name: Recreate venv and install repo
+          vars:
+            recreate_venv: false
+          when: recreate_venv | bool
+          block:
+            - name: Remove existing venv
+              file:
+                path: /root/venv
+                state: absent
+
+            - name: Create new venv
+              command: python3.10 -m venv /root/venv
+              args:
+                creates: /root/venv/bin/activate
+
+            - name: Upgrade pip in the new venv
+              pip:
+                name: pip
+                state: latest
+                virtualenv: /root/venv
+
+            - name: Install repo in editable mode
+              pip:
+                name: /root/d_training
+                editable: true
+                virtualenv: /root/venv
+
+        - name: Set __run__ to 1 in distributed_training/__init__.py
+          lineinfile:
+            path: /root/d_training/distributed_training/__init__.py
+            regexp: '^__run__\s*='
+            line: '__run__ = "1"'
+          when: network == 'test'
+
+        - name: Check if file is unchanged
+          command: git diff --quiet -- "{{ item }}"
+          args:
+            chdir: /root/d_training
+          register: file_clean
+          failed_when: false
+          changed_when: false
+          loop:
+            - eval/eval_loss.py
+            - distributed_training/data/dataset_loader.py
+
+        - name: Replace R2_ with K_R2_ in eval and loader
+          replace:
+            path: "/root/d_training/{{ item.item }}"
+            regexp: 'R2_'
+            replace: 'K_R2_'
+          loop: "{{ file_clean.results }}"
+          when:
+            - branch in ["r2-dataset-integration", "r2-eval-log-dl-prints", "r2-eval-loss-print"]
+            - item.rc == 0   # rc==0 means 'git diff --quiet' found no changes
+
+        - name: Determine subtensor argument
+          set_fact:
+            subtensor: >-
+              {% if network == 'local' %}
+              --subtensor.chain_endpoint local
+              {% else %}
+              --subtensor.network {{ network }}
+              {% endif %}
+
+        - name: Clear all PM2 logs
+          shell: |
+            [ -d "$HOME/.pm2/logs" ] && truncate -s 0 $HOME/.pm2/logs/distributed-training-miner-* || true
+            [ -f "$HOME/.pm2/pm2.log" ] && truncate -s 0 $HOME/.pm2/pm2.log || true
+            [ -f "$HOME/.pm2/logs/pm2-error.log" ] && truncate -s 0 $HOME/.pm2/logs/pm2-error.log || true
+            [ -f "$HOME/.pm2/logs/pm2-out.log" ] && truncate -s 0 $HOME/.pm2/logs/pm2-out.log || true
+          args:
+            executable: /bin/bash
+
+        - name: Determine validator or miner script
+          set_fact:
+            entrypoint: >-
+              {% if role == 'validator' %}
+              neurons/validator.py
+              {% else %}
+              neurons/miner.py
+              {% endif %}
+
+        - name: Start miner
+          vars:
+            test_allreduce: false
+            pm2_cmd: >-
+              pm2 start --no-autorestart "torchrun --nproc_per_node={{ miner_flags.num_gpus }} {{ entrypoint }}
+              --netuid {{ netuid }}
+              {{ subtensor }}
+              --wallet.name {{ wallet_name }}
+              --wallet.hotkey {{ wallet_hotkey }}
+              --axon.port {{ miner_flags.axon_port }}
+              --dht.port {{ miner_flags.dht_port }}
+              --dht.ip {{ miner_flags.ip }}
+              {% if miner_flags.batch_size is not none %}--neuron.local_batch_size_train {{ miner_flags.batch_size }}{% endif %}
+              --neuron.global_model_name {{ miner_flags.model_name }}
+              {% if miner_flags.upload_steps is not none %}--neuron.upload_steps {{ miner_flags.upload_steps }}{% endif %}
+              {% if miner_flags.show_all_rank_logs %} --neuron.show_all_rank_logs{% endif %}
+              {% if miner_flags.dont_wandb_log %} --neuron.dont_wandb_log{% endif %}
+              {% if miner_flags.log_level %} --logging.{{ miner_flags.log_level }}{% endif %}
+              {% if network == 'test' %}
+              --neuron.wandb_project distributed_training_test
+              --neuron.run_id v1_2_0_r0_testnet
+              --neuron.initial_peers /ip4/161.97.156.125/tcp/8001/p2p/12D3KooWC7MDWbqtQzrJaAiSpWix3Nj1ix6DKPHVYhxg2V8WiEt9
+              {% if test_allreduce %}
+              --neuron.master_ss58_address 5F1n1cbTHyghgecbqfyCPCAmK7icPgZv53HXGFY3n6dHEZNN # uid 20 ss58
+              --neuron.min_group_size 1
+              # --neuron.blocks_per_allreduce 1
+              {% else %}
+              --neuron.master_ss58_address 5ECDEtiHDP7tXeG3L7PViHsjSUPCsijKEokrFWhdXuATDjH1
+              {% endif %}**{% endif %}**" --name distributed_training_miner
+          block:
+            - name: Run start command
+              shell: |
+                source /root/venv/bin/activate
+                export NCCL_P2P_DISABLE=1
+                echo $NCCL_P2P_DISABLE
+                pm2 describe distributed_training_miner >/dev/null 2>&1 && pm2 delete distributed_training_miner || true
+                {{ pm2_cmd }}
+              args:
+                chdir: /root/d_training
+                executable: /bin/bash
+              ignore_errors: yes
+
+            - name: Print start command
+              debug:
+                msg: "{{ pm2_cmd }}"
+
+        - name: Show repo, branch, and latest commit
+          shell: |
+            cd /root/d_training
+            git log -1 --pretty=format:'%h - %s (%cr)'
+          args:
+            executable: /bin/bash
+          register: git_info
+          changed_when: false
+
+        - name: Print miner repo and commit info
+          debug:
+            msg: "Repo: {{ repo }}, Branch: {{ branch }}, Latest commit: {{ git_info.stdout }}"      
+
+        - name: Print download logs
+          debug:
+            msg: |
+              cd $SUBNET_DIR/38/ansible/ && ansible-playbook -i inventory.ini books/download_log.yml --limit {{ inventory_hostname }}
+
+        - name: Print restart miner
+          debug:
+            msg: |
+              cd $SUBNET_DIR/38/ansible/ && ansible-playbook -i inventory.ini books/start.yml --limit {{ inventory_hostname }}
+
+        - name: Print SSH command to connect to this miner
+          debug:
+            msg: "ssh -A root@{{ ip }} -p {{ ssh_port }}"
+
+        # - name: Confirm {{ role }} started
+        #   shell: |
+        #     LOG_FILE="/root/.pm2/logs/distributed-training-miner-out.log"
+
+        #     {% if role == 'miner' %}
+        #     INIT_STRING="You are allowing non-validators to send requests to your miner"
+        #     {% elif role == 'validator' %}
+        #     INIT_STRING="Loading validator state"
+        #     {% endif %}
+
+        #     TIMEOUT=60
+        #     INTERVAL=5
+        #     elapsed=0
+
+        #     while [ $elapsed -lt $TIMEOUT ]; do
+        #         if grep -qF "$INIT_STRING" "$LOG_FILE"; then
+        #             echo "PM2 startup detected for {{ role }}."
+        #             exit 0
+        #         fi
+        #         sleep $INTERVAL
+        #         elapsed=$((elapsed + INTERVAL))
+        #     done
+
+        #     echo "ERROR: \"$INIT_STRING\" not found after $TIMEOUT seconds for {{ role }}."
+        #     echo "Check the log file manually: $LOG_FILE"
+        #     exit 1
+        #   args:
+        #     executable: /bin/bash
+        #   register: pm2_start_check
+        #   ignore_errors: yes
+
+        # - name: Confirm {{ role }} working
+        #   shell: |
+        #     LOG_FILE="/root/.pm2/logs/distributed-training-miner-out.log"
+
+        #     {% if role == 'miner' %}
+        #     WORKING_STRING="Resuming continuous training"
+        #     {% elif role == 'validator' %}
+        #     WORKING_STRING="Compressor Loaded"
+        #     {% endif %}
+
+        #     TIMEOUT=2000
+        #     INTERVAL=20
+        #     elapsed=0
+
+        #     while [ $elapsed -lt $TIMEOUT ]; do
+        #         if grep -qF "$WORKING_STRING" "$LOG_FILE"; then
+        #             echo "{{ role }} is now fully operational."
+        #             exit 0
+        #         fi
+        #         sleep $INTERVAL
+        #         elapsed=$((elapsed + INTERVAL))
+        #     done
+
+        #     echo "ERROR: \"$WORKING_STRING\" not found after $TIMEOUT seconds for {{ role }}."
+        #     echo "Check the log file manually: $LOG_FILE"
+        #     exit 1
+        #   args:
+        #     executable: /bin/bash
+        #   register: node_operational_check
+        #   ignore_errors: yes
+
+
+      rescue:
+        - name: Show rerun command for the failed task
+          debug:
+            msg: >
+              cd $SUBNET_DIR/38/ansible/ &&
+              ansible-playbook -i inventory.ini books/start.yml
+              --limit {{ inventory_hostname }}
+              --start-at-task='{{ ansible_failed_result.task }}'
+
+      ignore_unreachable: no
+
+      # always:
+      #   - name: Print SSH command
+      #     debug:
+      #       msg: "ssh -A root@{{ ip }} -p {{ ssh_port }}"
+
+

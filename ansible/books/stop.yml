@@ -1,0 +1,21 @@
+- hosts: "miners"
+  become: yes
+
+  tasks:
+    - name: Source .env
+      shell: |
+        set -a
+        source /root/d_training/.env
+        set +a
+      args:
+        executable: /bin/bash
+
+    - name: Hard stop distributed_training_miner
+      shell: pm2 delete distributed_training_miner || true
+      args:
+        executable: /bin/bash
+
+    - name: Confirm miner stopped
+      shell: pm2 list | grep distributed_training_miner || echo "Miner stopped"
+      args:
+        executable: /bin/bash

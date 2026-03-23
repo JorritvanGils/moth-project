@@ -32,11 +32,11 @@ VAST_API_BASE = "https://console.vast.ai/api/v0"
 HEADERS = {"Authorization": f"Bearer {VAST_KEY}", "Content-Type": "application/json"}
 
 TARGET_GPUS = [
-    'RTX 4090',
-    'RTX 4080', 
-    'RTX 3090',
-    'RTX A6000',
-    'A100 PCIE'
+    'RTX 3090',   
+    # 'RTX 4090',
+    # 'RTX 4080', 
+    # 'RTX A6000',
+    # 'A100 PCIE'
 ]
 
 class SimpleVastDeployer:
@@ -104,7 +104,7 @@ class SimpleVastDeployer:
     def filter_offers(self, offers: List[Dict]) -> List[Dict]:
         """
         Apply filtering rules:
-        - Max 10 per GPU type
+        - Max 20 per GPU type
         - Only one per location (cheapest per location)
         """
         if not offers:
@@ -133,7 +133,7 @@ class SimpleVastDeployer:
                 location_cheapest.append(cheapest)
             
             location_cheapest.sort(key=lambda x: x.get("dph_total", float('inf')))
-            filtered_offers.extend(location_cheapest[:10])
+            filtered_offers.extend(location_cheapest[:20])
         
         filtered_offers.sort(key=lambda x: x.get("dph_total", float('inf')))
         
@@ -781,6 +781,15 @@ def main():
     
     deployer = SimpleVastDeployer(label_prefix="simple")
     
+    # Get desired action before deployment
+    print("\n📋 What would you like to do after deployment?")
+    print("1. SSH into instance")
+    print("2. Run 'Setup moth project' playbook")
+    print("3. Run custom playbook")
+    print("4. Just deploy and exit")
+    
+    action_choice = input("\nSelect option (1-4): ").strip()
+    
     print("\n🔍 Fetching available GPUs...")
     raw_offers = deployer.fetch_available_gpus(num_gpus=1, min_download=100)
     
@@ -791,73 +800,48 @@ def main():
     filtered_offers = deployer.filter_offers(raw_offers)
     print(f"📊 Found {len(raw_offers)} raw offers, filtered to {len(filtered_offers)}")
     
-    # Select multiple offers with range support
     selected_offers = deployer.select_offers_interactive(filtered_offers)
     if not selected_offers:
         print("Selection cancelled")
         return
     
-    # Try offers sequentially
     if deployer.try_offers_sequential(selected_offers, disk_size=100):
-        # Success! Show interactive menu with Ansible options
-        while True:
-            print("\n" + "="*50)
-            print("Options:")
-            print("1. SSH into instance")
-            print("2. Terminate instance")
-            print("3. Show connection info")
-            print("4. Run Ansible 'Setup moth project' pplaybook")
-            print("5. Run custom Ansible playbook")
-            print("6. Exit (keep instance running)")
-            
-            choice = input("\nSelect option (1-6): ").strip()
-            
-            if choice == "1":
-                deployer.ssh_to_instance()
-            elif choice == "2":
-                if deployer.terminate_instance():
-                    break
-            elif choice == "3":
-                print(f"\n📡 Connection info:")
-                print(f"   Instance ID: {deployer.instance_id}")
-                print(f"   IP: {deployer.ip}")
-                print(f"   SSH Port: {deployer.ssh_port}")
-                print(f"   SSH command: ssh -p {deployer.ssh_port} root@{deployer.ip}")
-                print(f"   Inventory: ../ansible/inventory.ini")
-            elif choice == "4":
-                deployer.run_ansible_playbook("setup_moth_project.yml")
-            elif choice == "5":
-                script_dir = os.path.dirname(os.path.abspath(__file__))
-                books_dir = os.path.join(script_dir, "../ansible/books")
-                if os.path.exists(books_dir):
-                    playbooks = [f for f in os.listdir(books_dir) if f.endswith('.yml')]
-                    if playbooks:
-                        print("\n📚 Available playbooks:")
-                        for i, pb in enumerate(playbooks, 1):
-                            print(f"   {i}. {pb}")
-                        pb_choice = input("\nSelect playbook number (or name): ").strip()
-                        try:
-                            # Check if it's a number
-                            idx = int(pb_choice) - 1
-                            if 0 <= idx < len(playbooks):
-                                deployer.run_ansible_playbook(playbooks[idx])
-                            else:
-                                print("Invalid selection")
-                        except ValueError:
-                            # Assume it's a name
-                            deployer.run_ansible_playbook(pb_choice)
-                    else:
-                        print("❌ No playbooks found in ../ansible/books/")
+        if action_choice == "1":
+            deployer.ssh_to_instance()
+        elif action_choice == "2":
+            deployer.run_ansible_playbook("setup_moth_project.yml")
+        elif action_choice == "3":
+            script_dir = os.path.dirname(os.path.abspath(__file__))
+            books_dir = os.path.join(script_dir, "../ansible/books")
+            if os.path.exists(books_dir):
+                playbooks = [f for f in os.listdir(books_dir) if f.endswith('.yml')]
+                if playbooks:
+                    print("\n📚 Available playbooks:")
+                    for i, pb in enumerate(playbooks, 1):
+                        print(f"   {i}. {pb}")
+                    pb_choice = input("\nSelect playbook number (or name): ").strip()
+                    try:
+                        idx = int(pb_choice) - 1
+                        if 0 <= idx < len(playbooks):
+                            deployer.run_ansible_playbook(playbooks[idx])
+                        else:
+                            print("Invalid selection")
+                    except ValueError:
+                        deployer.run_ansible_playbook(pb_choice)
                 else:
-                    print("❌ Ansible books directory not found")
-            elif choice == "6":
-                print("\n👋 Exiting. Instance is still running.")
-                print(f"To reconnect later: ssh -p {deployer.ssh_port} root@{deployer.ip}")
-                print(f"To run Ansible: ansible-playbook -i ../ansible/inventory.ini ../ansible/books/provision.yml")
-                print(f"To terminate later: python {__file__} --terminate {deployer.instance_id}")
-                break
+                    print("❌ No playbooks found in ../ansible/books/")
             else:
-                print("Invalid choice")
+                print("❌ Ansible books directory not found")
+        elif action_choice == "4":
+            print(f"\n✅ Instance deployed successfully!")
+            print(f"📡 Connection info:")
+            print(f"   SSH command: ssh -p {deployer.ssh_port} root@{deployer.ip}")
+            print(f"   To terminate: python {__file__} --terminate {deployer.instance_id}")
+        
+        if action_choice not in ["1", "2", "3"]:
+            print("\n👋 Exiting. Instance is still running.")
+            print(f"To reconnect later: ssh -p {deployer.ssh_port} root@{deployer.ip}")
+            print(f"To terminate later: python {__file__} --terminate {deployer.instance_id}")
     else:
         print("\n❌ Could not find a working instance among the selected offers.")
 
@@ -880,20 +864,3 @@ if __name__ == "__main__":
     else:
         main()
 
-
-# the problem currently is that vast ai provides 2 ssh connection options. 
-# ssh -p 40018 root@5.199.239.202 -L 8080:localhost:8080
-# ssh -p 26172 root@ssh7.vast.ai -L 8080:localhost:8080
-# turns out vast.py only tries the first,.
-# apparently this one wasn't woring but the second one did. 
-# can we solve this by letting the script trying both?
-
-
-# deepseek
-# Currently we can only get to see our menu with the (ansible) options.
-# after choosing a gpu. While sometimes we already have a gpu ready. But then we also want 
-# to be able to see that menu and select the ansible options for that already spunn up machine. 
-# in fact as we're only needing 1 gpu, if there is one ready we actually don't need to also show 
-# the suggestion to spinn up a new one and show the available gpu's. Does that make sense?
-
-# Maybe only 3090 and show 30 results and  also allow for setting a min bandwidth (now we had 100). 

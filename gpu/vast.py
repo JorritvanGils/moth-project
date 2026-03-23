@@ -422,40 +422,60 @@ class SimpleVastDeployer:
                 ports = instance_info.get("ports", {})
                 status = instance_info.get("actual_status", "")
                 
-                # Check if instance is running and has ports
-                if ports and status == "running":
+                if status == "running":
+                    direct_ip = instance_info.get("public_ipaddr")
+                    direct_port = None
+                    proxy_host = instance_info.get("ssh_host")
+                    proxy_port = instance_info.get("ssh_port")
+                    
+                    ssh_mappings = ports.get("22/tcp", [])
+                    if ssh_mappings:
+                        direct_port = int(ssh_mappings[0].get("HostPort", 22))
+                    
                     print(f"\n✅ Instance ready (attempt {attempt}/{max_retries})")
                     
-                    self.ip = instance_info.get("public_ipaddr")
-                    ports_dict = instance_info.get("ports", {})
+                    connection_working = False
                     
-                    ssh_mappings = ports_dict.get("22/tcp", [])
-                    if ssh_mappings:
-                        self.ssh_port = int(ssh_mappings[0].get("HostPort", 22))
+                    if direct_ip and direct_port:
+                        print(f"\n📡 Connection option 1 (Direct):")
+                        print(f"   IP: {direct_ip}")
+                        print(f"   Port: {direct_port}")
+                        print(f"   Command: ssh -p {direct_port} root@{direct_ip}")
+                        
+                        if self._test_ssh_connection(direct_ip, direct_port):
+                            self.ip = direct_ip
+                            self.ssh_port = direct_port
+                            connection_working = True
                     
-                    if self.ip and self.ssh_port:
-                        print(f"📡 Connection info:")
-                        print(f"   IP: {self.ip}")
-                        print(f"   SSH Port: {self.ssh_port}")
-                        print(f"   SSH command: ssh -p {self.ssh_port} root@{self.ip}")
+                    if not connection_working and proxy_host and proxy_port:
+                        if not (direct_ip == proxy_host and direct_port == proxy_port):
+                            print(f"\n📡 Connection option 2 (Proxy):")
+                            print(f"   Host: {proxy_host}")
+                            print(f"   Port: {proxy_port}")
+                            print(f"   Command: ssh -p {proxy_port} root@{proxy_host}")
+                            
+                            if self._test_ssh_connection(proxy_host, proxy_port):
+                                self.ip = proxy_host
+                                self.ssh_port = proxy_port
+                                connection_working = True
+                    
+                    if connection_working:
+                        print(f"\n✅ Using connection: ssh -p {self.ssh_port} root@{self.ip}")
                         
-                        print(f"\n📋 Instance Details:")
-                        print(f"   Label: {instance_info.get('label', 'N/A')}")
-                        print(f"   Status: {status}")
-                        
-                        # Auto-generate Ansible inventory if requested
                         if auto_generate_inventory:
                             self.generate_ansible_inventory()
                         
                         return True
+                    else:
+                        print(f"\n❌ Both SSH connection methods failed")
+                        return False
                 
-                # Check if instance failed
                 if status in ["error", "offline", "stopped"]:
                     print(f"\n❌ Instance entered bad state: {status}")
                     return False
                         
                 if attempt < max_retries:
-                    print(f"\r⏳ Attempt {attempt}/{max_retries}: Status: {status}, Waiting for ports...", end="", flush=True)
+                    print(f"\r⏳ Attempt {attempt}/{max_retries}: Status: {status}, Waiting...", end="", flush=True)
                     time.sleep(retry_interval)
                     
             except (subprocess.CalledProcessError, json.JSONDecodeError) as e:
@@ -465,6 +485,43 @@ class SimpleVastDeployer:
         
         print("\n❌ Instance never became ready")
         return False
+
+    def _test_ssh_connection(self, host: str, port: int, timeout: int = 5) -> bool:
+        """
+        Test SSH connection to verify it's working
+        
+        Args:
+            host: Hostname or IP
+            port: SSH port
+            timeout: Connection timeout in seconds
+            
+        Returns:
+            True if connection works, False otherwise
+        """
+        try:
+            result = subprocess.run(
+                ["nc", "-z", "-w", str(timeout), host, str(port)],
+                capture_output=True,
+                timeout=timeout + 1
+            )
+            if result.returncode == 0:
+                print(f"   ✅ Connection test successful")
+                return True
+            else:
+                print(f"   ❌ Connection test failed")
+                return False
+        except (subprocess.SubprocessError, FileNotFoundError):
+            try:
+                result = subprocess.run(
+                    ["ssh", "-p", str(port), "-o", "ConnectTimeout=5", "-o", "StrictHostKeyChecking=no", 
+                    f"root@{host}", "echo 'test'"],
+                    capture_output=True,
+                    timeout=timeout + 2
+                )
+                return result.returncode == 0
+            except:
+                return False
+
     def ssh_to_instance(self) -> None:
         """SSH into the instance"""
         if not self.ip or not self.ssh_port:
@@ -578,6 +635,7 @@ class SimpleVastDeployer:
     gpu_name={self.selected_offer.get('gpu_name', 'Unknown') if self.selected_offer else 'Unknown'}
     gpu_count={self.selected_offer.get('num_gpus', 1) if self.selected_offer else 1}
     location={self.selected_offer.get('geolocation', 'Unknown') if self.selected_offer else 'Unknown'}
+    ssh_command=ssh -p {self.ssh_port} root@{self.ip}
     """
             
             # Write to file

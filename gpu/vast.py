@@ -673,57 +673,57 @@ class SimpleVastDeployer:
             print(f"❌ Failed to generate Ansible inventory: {e}")
             return False
 
-def run_ansible_playbook(self, playbook: str, inventory_path: str = "../ansible/inventory.ini") -> bool:
-    """
-    Run an Ansible playbook on the deployed instance
-    
-    Args:
-        playbook: Name of the playbook to run (e.g., 'provision.yml')
-        inventory_path: Path to the inventory file
-    
-    Returns:
-        True if successful, False otherwise
-    """
-    if not self.ip or not self.ssh_port:
-        print("❌ No instance available to run Ansible on")
-        return False
-    
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    ansible_dir = os.path.join(script_dir, "../ansible")
-    inventory_abs_path = os.path.join(script_dir, inventory_path)
-    playbook_path = os.path.join(ansible_dir, "books", playbook)
-    
-    if not os.path.exists(playbook_path):
-        print(f"❌ Playbook not found: {playbook_path}")
-        return False
-    
-    cmd = [
-        "ansible-playbook",
-        "-i", inventory_abs_path,
-        playbook_path
-    ]
-    
-    print(f"\n📖 Running Ansible playbook: {playbook}")
-    print(" ".join(cmd))
-    
-    try:
-        # Don't capture output - let it go to terminal directly
-        result = subprocess.run(cmd)
-        if result.returncode == 0:
-            print(f"✅ Ansible playbook '{playbook}' completed successfully")
-            return True
-        else:
-            print(f"❌ Ansible playbook failed with exit code {result.returncode}")
+    def run_ansible_playbook(self, playbook: str, inventory_path: str = "../ansible/inventory.ini") -> bool:
+        """
+        Run an Ansible playbook on the deployed instance
+        
+        Args:
+            playbook: Name of the playbook to run (e.g., 'provision.yml')
+            inventory_path: Path to the inventory file
+        
+        Returns:
+            True if successful, False otherwise
+        """
+        if not self.ip or not self.ssh_port:
+            print("❌ No instance available to run Ansible on")
             return False
-    except FileNotFoundError:
-        print("❌ Ansible not found. Please install ansible: pip install ansible")
-        return False
-    except KeyboardInterrupt:
-        print("\n⚠️ Ansible playbook interrupted")
-        return False
-    except Exception as e:
-        print(f"❌ Failed to run Ansible playbook: {e}")
-        return False
+        
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        ansible_dir = os.path.join(script_dir, "../ansible")
+        inventory_abs_path = os.path.join(script_dir, inventory_path)
+        playbook_path = os.path.join(ansible_dir, "books", playbook)
+        
+        if not os.path.exists(playbook_path):
+            print(f"❌ Playbook not found: {playbook_path}")
+            return False
+        
+        cmd = [
+            "ansible-playbook",
+            "-i", inventory_abs_path,
+            playbook_path
+        ]
+        
+        print(f"\n📖 Running Ansible playbook: {playbook}")
+        print(" ".join(cmd))
+        
+        try:
+            # Don't capture output - let it go to terminal directly
+            result = subprocess.run(cmd)
+            if result.returncode == 0:
+                print(f"✅ Ansible playbook '{playbook}' completed successfully")
+                return True
+            else:
+                print(f"❌ Ansible playbook failed with exit code {result.returncode}")
+                return False
+        except FileNotFoundError:
+            print("❌ Ansible not found. Please install ansible: pip install ansible")
+            return False
+        except KeyboardInterrupt:
+            print("\n⚠️ Ansible playbook interrupted")
+            return False
+        except Exception as e:
+            print(f"❌ Failed to run Ansible playbook: {e}")
+            return False
 
 def list_running_instances(label_prefix: str = None) -> List[Dict]:
     """List all running instances, optionally filtered by label prefix"""

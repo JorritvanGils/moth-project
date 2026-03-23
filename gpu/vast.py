@@ -56,7 +56,7 @@ class SimpleVastDeployer:
     def fetch_available_gpus(
         self,
         num_gpus: int = 1,
-        min_download: int = 100,
+        min_download: int = 300, # CHANGE IF NEEDED
         limit: int = 50
     ) -> List[Dict]:
         """

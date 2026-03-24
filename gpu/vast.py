@@ -240,7 +240,7 @@ class SimpleVastDeployer:
                 if choice.lower() == 'q':
                     return []
                 
-                if choice.lower() == 'all':
+                if choice.lower() == 'all' or choice == '':
                     # Select all offers
                     selected_indices = list(range(1, len(offers) + 1))
                 else:
@@ -251,16 +251,7 @@ class SimpleVastDeployer:
                     continue
                 
                 selected_offers = [offers[i-1] for i in selected_indices]
-                
-                # print(f"\n✅ Selected {len(selected_offers)} offer(s):")
-                # for i, offer in enumerate(selected_offers, 1):
-                #     print(f"   {i}. {offer['num_gpus']}x {offer['gpu_name']} "
-                #           f"at {offer.get('geolocation', 'Unknown')} - "
-                #           f"${offer.get('dph_total', 0):.2f}/hr")
-                
-                # confirm = input("\nProceed with these offers? (Y/n): ").strip().lower()
-                # if confirm not in ('n', 'no'):
-                #     return selected_offers
+
                 return selected_offers
                 
             except KeyboardInterrupt:
@@ -313,10 +304,10 @@ class SimpleVastDeployer:
             self.ip = None
             self.ssh_port = None
             
-            # # Small pause between attempts
-            # if idx < len(offers):
-            #     print("\n⏳ Waiting 5 seconds before next attempt...")
-            #     time.sleep(5)
+            # Small pause between attempts
+            if idx < len(offers):
+                print("\n⏳ Waiting 5 seconds before next attempt...")
+                time.sleep(5)
         
         print("\n❌ All offers failed")
         return False
@@ -605,8 +596,6 @@ class SimpleVastDeployer:
             return location[:2].upper()
         return 'XX'
 
-    # Add this to your SimpleVastDeployer class (add after the existing methods)
-
     def generate_ansible_inventory(self, inventory_path: str = "../ansible/inventory.ini") -> bool:
         """
         Generate an Ansible inventory file for the deployed instance
@@ -659,7 +648,7 @@ class SimpleVastDeployer:
     gpu_name: {self.selected_offer.get('gpu_name', 'Unknown') if self.selected_offer else 'Unknown'}
     gpu_count: {self.selected_offer.get('num_gpus', 1) if self.selected_offer else 1}
     location: {self.selected_offer.get('geolocation', 'Unknown') if self.selected_offer else 'Unknown'}
-    ssh_command: ssh -p {self.ssh_port} root@{self.ip}
+    ssh_command: ssh -A -p {self.ssh_port} root@{self.ip}
     """
             
             with open(vars_path, 'w') as f:
@@ -725,6 +714,71 @@ class SimpleVastDeployer:
             print(f"❌ Failed to run Ansible playbook: {e}")
             return False
 
+    def show_instance_menu(self) -> None:
+        """Show interactive menu for managing the deployed instance"""
+        while True:
+            print("\n" + "="*60)
+            print(f"📡 Instance Management Menu")
+            print("="*60)
+            print(f"Instance ID: {self.instance_id}")
+            print(f"GPU: {self.selected_offer.get('gpu_name', 'Unknown') if self.selected_offer else 'Unknown'}")
+            print(f"Location: {self.selected_offer.get('geolocation', 'Unknown') if self.selected_offer else 'Unknown'}")
+            print(f"SSH: ssh -p {self.ssh_port} root@{self.ip}")
+            print("\nOptions:")
+            print("  1. SSH into instance")
+            print("  2. Run 'setup_moth_project.yml' playbook")
+            print("  3. Run a custom playbook")
+            print("  4. Show connection info")
+            print("  5. Terminate instance and exit")
+            print("  6. Exit (keep instance running)")
+            print("="*60)
+            
+            choice = input("\nSelect option (1-6): ").strip()
+            
+            if choice == "1":
+                self.ssh_to_instance()
+            elif choice == "2":
+                self.run_ansible_playbook("setup_moth_project.yml")
+            elif choice == "3":
+                script_dir = os.path.dirname(os.path.abspath(__file__))
+                books_dir = os.path.join(script_dir, "../ansible/books")
+                if os.path.exists(books_dir):
+                    playbooks = [f for f in os.listdir(books_dir) if f.endswith('.yml')]
+                    if playbooks:
+                        print("\n📚 Available playbooks:")
+                        for i, pb in enumerate(playbooks, 1):
+                            print(f"   {i}. {pb}")
+                        pb_choice = input("\nSelect playbook number (or name): ").strip()
+                        try:
+                            idx = int(pb_choice) - 1
+                            if 0 <= idx < len(playbooks):
+                                self.run_ansible_playbook(playbooks[idx])
+                            else:
+                                print("Invalid selection")
+                        except ValueError:
+                            self.run_ansible_playbook(pb_choice)
+                    else:
+                        print("❌ No playbooks found in ../ansible/books/")
+                else:
+                    print("❌ Ansible books directory not found")
+            elif choice == "4":
+                print("\n📡 Connection Information:")
+                print(f"   Instance ID: {self.instance_id}")
+                print(f"   SSH Command: ssh -p {self.ssh_port} root@{self.ip}")
+                print(f"   Ansible Inventory: ../ansible/inventory.ini")
+                print(f"   Host Vars: ../ansible/host_vars/{self.instance_id}.yml")
+            elif choice == "5":
+                if self.terminate_instance(confirm=True):
+                    print("Instance terminated. Exiting...")
+                    break
+            elif choice == "6":
+                print(f"\n👋 Exiting. Instance {self.instance_id} is still running.")
+                print(f"To reconnect later: ssh -p {self.ssh_port} root@{self.ip}")
+                print(f"To terminate later: python {__file__} --terminate {self.instance_id}")
+                break
+            else:
+                print("❌ Invalid option. Please select 1-6.")
+
 def list_running_instances(label_prefix: str = None) -> List[Dict]:
     """List all running instances, optionally filtered by label prefix"""
     try:
@@ -740,7 +794,6 @@ def list_running_instances(label_prefix: str = None) -> List[Dict]:
     except requests.RequestException as e:
         print(f"❌ Failed to list instances: {e}")
         return []
-
 
 def show_running_instances():
     """Show all running instances with simple prefix"""
@@ -769,7 +822,6 @@ def show_running_instances():
         print(f"   IP: {ip} | SSH Port: {ssh_port}")
         print(f"   SSH: ssh -p {ssh_port} root@{ip}")
         print("-" * 40)
-
 
 def main():
     """Main interactive function"""
@@ -805,6 +857,7 @@ def main():
         return
     
     if deployer.try_offers_sequential(selected_offers, disk_size=100):
+        # After successful deployment, run the selected action
         if action_choice == "1":
             deployer.ssh_to_instance()
         elif action_choice == "2":
@@ -831,16 +884,16 @@ def main():
                     print("❌ No playbooks found in ../ansible/books/")
             else:
                 print("❌ Ansible books directory not found")
-        elif action_choice == "4":
+        
+        # After running the initial action, show the management menu
+        if action_choice != "4":
+            deployer.show_instance_menu()
+        else:
             print(f"\n✅ Instance deployed successfully!")
             print(f"📡 Connection info:")
             print(f"   SSH command: ssh -p {deployer.ssh_port} root@{deployer.ip}")
             print(f"   To terminate: python {__file__} --terminate {deployer.instance_id}")
-        
-        if action_choice not in ["1", "2", "3"]:
-            print("\n👋 Exiting. Instance is still running.")
-            print(f"To reconnect later: ssh -p {deployer.ssh_port} root@{deployer.ip}")
-            print(f"To terminate later: python {__file__} --terminate {deployer.instance_id}")
+            print(f"\n👋 Exiting. Instance is still running.")
     else:
         print("\n❌ Could not find a working instance among the selected offers.")
 
@@ -862,4 +915,3 @@ if __name__ == "__main__":
             print("  python deploy_vast_simple.py --terminate <id>  # Terminate instance")
     else:
         main()
-

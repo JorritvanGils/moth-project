@@ -57,7 +57,11 @@ sudo apt install software-properties-common -y
 sudo add-apt-repository ppa:deadsnakes/ppa -y
 sudo apt install python3.10 python3.10-venv -y
 
+# mkdir -p ~/.venvs
+# python3.10 -m venv ~/.venvs/.moth
+# source ~/.venvs/.moth/bin/activate
 python3.10 -m venv .venv
+
 source .venv/bin/activate
 ```
 

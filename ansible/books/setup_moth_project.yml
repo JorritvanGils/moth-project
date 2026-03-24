@@ -9,109 +9,109 @@
     python_version: "3.10"
     
   tasks:
-    # - name: Update apt cache
-    #   apt:
-    #     update_cache: yes
-    #     cache_valid_time: 3600
-    #   become: yes
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+      become: yes
 
-    # - name: Upgrade all packages
-    #   apt:
-    #     upgrade: dist
-    #   become: yes
+    - name: Upgrade all packages
+      apt:
+        upgrade: dist
+      become: yes
 
-    # - name: Install basic dependencies
-    #   apt:
-    #     name:
-    #       - git
-    #       - python3-venv
-    #       - software-properties-common
-    #       - python3-pip
-    #       - build-essential
-    #       - rsync
-    #     state: present
-    #   become: yes
+    - name: Install basic dependencies
+      apt:
+        name:
+          - git
+          - python3-venv
+          - software-properties-common
+          - python3-pip
+          - build-essential
+          - rsync
+        state: present
+      become: yes
 
-    # - name: Add deadsnakes PPA for Python 3.10
-    #   apt_repository:
-    #     repo: ppa:deadsnakes/ppa
-    #     state: present
-    #   become: yes
+    - name: Add deadsnakes PPA for Python 3.10
+      apt_repository:
+        repo: ppa:deadsnakes/ppa
+        state: present
+      become: yes
 
-    # - name: Install Python 3.10
-    #   apt:
-    #     name:
-    #       - python3.10
-    #       - python3.10-venv
-    #       - python3.10-dev
-    #     state: present
-    #     update_cache: yes
-    #   become: yes
+    - name: Install Python 3.10
+      apt:
+        name:
+          - python3.10
+          - python3.10-venv
+          - python3.10-dev
+        state: present
+        update_cache: yes
+      become: yes
 
-    # - name: Clone moth project repository
-    #   git:
-    #     repo: "{{ project_repo }}"
-    #     dest: "{{ project_dir }}"
-    #     accept_hostkey: yes
-    #   register: git_result
-
-    # - name: Show git clone result
-    #   debug:
-    #     msg: "Repository cloned successfully"
-    #   when: git_result is success
-
-    # - name: Create output directories
-    #   file:
-    #     path: "{{ item }}"
-    #     state: directory
-    #     mode: '0755'
-    #   loop:
-    #     - "{{ project_dir }}/outputs/cls"
-    #     - "{{ project_dir }}/outputs/det"
-
-    # - name: Create Python virtual environment
-    #   command:
-    #     cmd: python3.10 -m venv .venv
-    #     chdir: "{{ project_dir }}"
-    #     creates: "{{ project_dir }}/.venv"
-
-    # - name: Upgrade pip in virtual environment
-    #   pip:
-    #     name: pip
-    #     state: latest
-    #     virtualenv: "{{ project_dir }}/.venv"
-    #     virtualenv_python: python3.10
-
-    # - name: Install project in development mode
-    #   pip:
-    #     name: "{{ project_dir }}"
-    #     state: present
-    #     virtualenv: "{{ project_dir }}/.venv"
-    #     editable: yes
-
-    # - name: Create datasets directory structure
-    #   file:
-    #     path: "{{ item }}"
-    #     state: directory
-    #     mode: '0755'
-    #   loop:
-    #     - "{{ datasets_dir }}/det"
-    #     - "{{ datasets_dir }}/cls"
-
-    # - name: Clone classification dataset (EU Moths)
-    #   git:
-    #     repo: git@github.com:cvjena/eu-moths-dataset.git
-    #     dest: "{{ datasets_dir }}/cls/eu"
-    #     accept_hostkey: yes
-    #   register: eu_clone
-
-
-    - name: Clone detection dataset (NID)
+    - name: Clone moth project repository
       git:
-        repo: git@github.com:cvjena/nid-dataset.git
-        dest: "{{ datasets_dir }}/det/nid"
+        repo: "{{ project_repo }}"
+        dest: "{{ project_dir }}"
         accept_hostkey: yes
-      register: nid_clone   
+      register: git_result
+
+    - name: Show git clone result
+      debug:
+        msg: "Repository cloned successfully"
+      when: git_result is success
+
+    - name: Create output directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        mode: '0755'
+      loop:
+        - "{{ project_dir }}/outputs/cls"
+        - "{{ project_dir }}/outputs/det"
+
+    - name: Create Python virtual environment
+      command:
+        cmd: python3.10 -m venv .venv
+        chdir: "{{ project_dir }}"
+        creates: "{{ project_dir }}/.venv"
+
+    - name: Upgrade pip in virtual environment
+      pip:
+        name: pip
+        state: latest
+        virtualenv: "{{ project_dir }}/.venv"
+        virtualenv_python: python3.10
+
+    - name: Install project in development mode
+      pip:
+        name: "{{ project_dir }}"
+        state: present
+        virtualenv: "{{ project_dir }}/.venv"
+        editable: yes
+
+    - name: Create datasets directory structure
+      file:
+        path: "{{ item }}"
+        state: directory
+        mode: '0755'
+      loop:
+        - "{{ datasets_dir }}/det"
+        - "{{ datasets_dir }}/cls"
+
+    - name: Clone classification dataset (EU Moths)
+      git:
+        repo: git@github.com:cvjena/eu-moths-dataset.git
+        dest: "{{ datasets_dir }}/cls/eu"
+        accept_hostkey: yes
+      register: eu_clone
+
+
+    # - name: Clone detection dataset (NID)
+    #   git:
+    #     repo: git@github.com:cvjena/nid-dataset.git
+    #     dest: "{{ datasets_dir }}/det/nid"
+    #     accept_hostkey: yes
+    #   register: nid_clone   
 
     # - name: Run nid_to_yolo.py conversion
     #   command:
@@ -121,57 +121,57 @@
     #   register: conversion_result
     #   ignore_errors: yes
 
-    # - name: Show conversion result
-    #   debug:
-    #     msg: "NID to YOLO conversion completed"
-    #   when: conversion_result is success
+    - name: Show conversion result
+      debug:
+        msg: "NID to YOLO conversion completed"
+      when: conversion_result is success
 
-    # - name: Create a simple test script
-    #   copy:
-    #     content: |
-    #       #!/bin/bash
-    #       source {{ project_dir }}/.venv/bin/activate
-    #       echo "Environment activated successfully!"
-    #       echo "Python version: $(python --version)"
-    #       echo "Pip list:"
-    #       pip list | grep -E "(torch|ultralytics|moth)"
-    #     dest: "{{ project_dir }}/test_env.sh"
-    #     mode: '0755'
+    - name: Create a simple test script
+      copy:
+        content: |
+          #!/bin/bash
+          source {{ project_dir }}/.venv/bin/activate
+          echo "Environment activated successfully!"
+          echo "Python version: $(python --version)"
+          echo "Pip list:"
+          pip list | grep -E "(torch|ultralytics|moth)"
+        dest: "{{ project_dir }}/test_env.sh"
+        mode: '0755'
 
-    # - name: Display setup summary
-    #   debug:
-    #     msg:
-    #       - "✅ Moth Project setup complete!"
-    #       - "📁 Project location: {{ project_dir }}"
-    #       - "🐍 Virtual environment: {{ project_dir }}/.venv"
-    #       - "📊 Datasets: {{ datasets_dir }}"
-    #       - ""
-    #       - "To activate environment:"
-    #       - "  cd {{ project_dir }} && source .venv/bin/activate"
-    #       - ""
-    #       - "To run training:"
-    #       - "  cd {{ project_dir }} && python -m tasks.train"
-    #       - ""
-    #       - "To test environment:"
-    #       - "  {{ project_dir }}/test_env.sh"
+    - name: Display setup summary
+      debug:
+        msg:
+          - "✅ Moth Project setup complete!"
+          - "📁 Project location: {{ project_dir }}"
+          - "🐍 Virtual environment: {{ project_dir }}/.venv"
+          - "📊 Datasets: {{ datasets_dir }}"
+          - ""
+          - "To activate environment:"
+          - "  cd {{ project_dir }} && source .venv/bin/activate"
+          - ""
+          - "To run training:"
+          - "  cd {{ project_dir }} && python -m tasks.train"
+          - ""
+          - "To test environment:"
+          - "  {{ project_dir }}/test_env.sh"
 
-    # # be aware log being put into outputs
-    # - name: Run training
-    #   shell: |
-    #     {{ project_dir }}/.venv/bin/python -m tasks.train | tee {{ project_dir }}/outputs/train.log
-    #   args:
-    #     chdir: "{{ project_dir }}"
+    # be aware log being put into outputs
+    - name: Run training
+      shell: |
+        {{ project_dir }}/.venv/bin/python -m tasks.train | tee {{ project_dir }}/outputs/train.log
+      args:
+        chdir: "{{ project_dir }}"
 
-    # - name: Sync outputs to local machine
-    #   synchronize:
-    #     src: "{{ project_dir }}/outputs/det/001_20260324_yolo_n/"
-    #     dest: "/media/jorrit/ssd/phd/outputs/001_20260324_yolo_n/"
-    #     mode: pull    
+    - name: Sync outputs to local machine
+      synchronize:
+        src: "{{ project_dir }}/outputs/det/001_20260324_yolo_n/"
+        dest: "/media/jorrit/ssd/phd/outputs/001_20260324_yolo_n/"
+        mode: pull    
 
-    # - name: Add automatic project cd and venv activation to bashrc
-    #   lineinfile:
-    #     path: ~/.bashrc
-    #     line: |
-    #       # Automatically go to moths project and activate venv
-    #       cd {{ project_dir }} && source .venv/bin/activate
-    #     state: present
+    - name: Add automatic project cd and venv activation to bashrc
+      lineinfile:
+        path: ~/.bashrc
+        line: |
+          # Automatically go to moths project and activate venv
+          cd {{ project_dir }} && source .venv/bin/activate
+        state: present

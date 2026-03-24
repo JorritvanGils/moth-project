@@ -60,6 +60,14 @@
         msg: "Repository cloned successfully"
       when: git_result is success
 
+    - name: Add automatic project cd and venv activation to bashrc
+      lineinfile:
+        path: ~/.bashrc
+        line: |
+          # Automatically go to moths project and activate venv
+          cd {{ project_dir }} && source .venv/bin/activate
+        state: present   
+
     - name: Create output directories
       file:
         path: "{{ item }}"
@@ -105,21 +113,20 @@
         accept_hostkey: yes
       register: eu_clone
 
+    - name: Clone detection dataset (NID)
+      git:
+        repo: git@github.com:cvjena/nid-dataset.git
+        dest: "{{ datasets_dir }}/det/nid"
+        accept_hostkey: yes
+      register: nid_clone   
 
-    # - name: Clone detection dataset (NID)
-    #   git:
-    #     repo: git@github.com:cvjena/nid-dataset.git
-    #     dest: "{{ datasets_dir }}/det/nid"
-    #     accept_hostkey: yes
-    #   register: nid_clone   
-
-    # - name: Run nid_to_yolo.py conversion
-    #   command:
-    #     cmd: "{{ project_dir }}/.venv/bin/python tasks/nid_to_yolo.py"
-    #     chdir: "{{ project_dir }}"
-    #   when: nid_clone is success
-    #   register: conversion_result
-    #   ignore_errors: yes
+    - name: Run nid_to_yolo.py conversion
+      command:
+        cmd: "{{ project_dir }}/.venv/bin/python tasks/nid_to_yolo.py"
+        chdir: "{{ project_dir }}"
+      when: nid_clone is success
+      register: conversion_result
+      ignore_errors: yes
 
     - name: Show conversion result
       debug:
@@ -155,23 +162,35 @@
           - "To test environment:"
           - "  {{ project_dir }}/test_env.sh"
 
-    # be aware log being put into outputs
-    - name: Run training
-      shell: |
-        {{ project_dir }}/.venv/bin/python -m tasks.train | tee {{ project_dir }}/outputs/train.log
-      args:
-        chdir: "{{ project_dir }}"
+    # for now at this point in time I would just ssh into the gpu and manually run:
+    # python -m tasks.train | tee outputs/train.log 
+    # then try the get_output.yml playbook
+    # continue with:
+    # - trying a few runs increasing params (notice difference when switch to gpu?)
+    # - train also a yolo classification on the eu dataset
+    # - maybe try to run a ViT model on the classification on that eu dataset
+    # - what were the metrics used in that one paper? Maybe we can order yolo + vit outputs so we get 
+    # clearer and similar outputs.
+    # then come back to add tmux here if thats handy so you can ssh into machine and check training progress live. 
+    # check datasets mail Paul Bodesheim: Fri 13 Feb, 11:01, also see bookmarks and add datasets
 
-    - name: Sync outputs to local machine
-      synchronize:
-        src: "{{ project_dir }}/outputs/det/001_20260324_yolo_n/"
-        dest: "/media/jorrit/ssd/phd/outputs/001_20260324_yolo_n/"
-        mode: pull    
 
-    - name: Add automatic project cd and venv activation to bashrc
-      lineinfile:
-        path: ~/.bashrc
-        line: |
-          # Automatically go to moths project and activate venv
-          cd {{ project_dir }} && source .venv/bin/activate
-        state: present
+    # # be aware log being put into outputs
+    # - name: Run training
+    #   shell: |
+    #     {{ project_dir }}/.venv/bin/python -m tasks.train | tee {{ project_dir }}/outputs/train.log
+    #   args:
+    #     chdir: "{{ project_dir }}"
+  
+    # - name: Sync outputs to local machine
+    #   synchronize:
+    #     src: "{{ project_dir }}/outputs/det/001_20260324_yolo_n/"
+    #     dest: "/media/jorrit/ssd/phd/outputs/001_20260324_yolo_n/"
+    #     mode: pull
+
+    # # probably this is what we need eventually
+    # - name: Start training in background
+    #   shell: |
+    #     nohup {{ project_dir }}/.venv/bin/python -m tasks.train > {{ project_dir }}/outputs/train.log 2>&1 &
+    #   args:
+    #     chdir: "{{ project_dir }}"

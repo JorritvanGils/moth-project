@@ -726,7 +726,7 @@ class SimpleVastDeployer:
             print(f"SSH: ssh -p {self.ssh_port} root@{self.ip}")
             print("\nOptions:")
             print("  1. SSH into instance")
-            print("  2. Run 'setup_moth_project.yml' playbook")
+            print("  2. Run 'install_and_train.yml' playbook")
             print("  3. Run a custom playbook")
             print("  4. Show connection info")
             print("  5. Terminate instance and exit")
@@ -738,7 +738,7 @@ class SimpleVastDeployer:
             if choice == "1":
                 self.ssh_to_instance()
             elif choice == "2":
-                self.run_ansible_playbook("setup_moth_project.yml")
+                self.run_ansible_playbook("install_and_train.yml")
             elif choice == "3":
                 script_dir = os.path.dirname(os.path.abspath(__file__))
                 books_dir = os.path.join(script_dir, "../ansible/books")
@@ -835,7 +835,7 @@ def main():
     # Get desired action before deployment
     print("\n📋 What would you like to do after deployment?")
     print("1. SSH into instance")
-    print("2. Run 'Setup moth project' playbook")
+    print("2. Run 'install_and_train' playbook")
     print("3. Run custom playbook")
     print("4. Just deploy and exit")
     
@@ -861,7 +861,7 @@ def main():
         if action_choice == "1":
             deployer.ssh_to_instance()
         elif action_choice == "2":
-            deployer.run_ansible_playbook("setup_moth_project.yml")
+            deployer.run_ansible_playbook("install_and_train.yml")
         elif action_choice == "3":
             script_dir = os.path.dirname(os.path.abspath(__file__))
             books_dir = os.path.join(script_dir, "../ansible/books")

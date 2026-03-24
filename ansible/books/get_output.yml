@@ -1,0 +1,37 @@
+---
+- name: Setup Moth Project on GPU instance
+  hosts: vast_gpus
+  gather_facts: yes
+  vars:
+    project_dir: "/root/moths"
+    
+  tasks:
+    # - name: Sync outputs to local machine
+    #   synchronize:
+    #     src: "{{ project_dir }}/outputs/det/001_20260324_yolo_n/"
+    #     dest: "/media/jorrit/ssd/phd/outputs/001_20260324_yolo_n/"
+    #     mode: pull
+
+    - name: Find all det folders
+      find:
+        paths: "{{ project_dir }}/outputs/det/"
+        file_type: directory
+        depth: 1
+      register: det_folders
+
+    - name: Select folder with largest numeric prefix
+      set_fact:
+        latest_folder: >-
+          {{ det_folders.files
+            | map(attribute='path')
+            | sort(attribute='path', reverse=True)
+            | select('match', '.*/[0-9]{3}_.*') 
+            | list
+            | first }}
+
+    - name: Sync latest outputs to local machine
+      synchronize:
+        src: "{{ latest_folder }}/"
+    dest: "/media/jorrit/ssd/phd/outputs/"
+    mode: pull        
+

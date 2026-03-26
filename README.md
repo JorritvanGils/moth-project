@@ -177,15 +177,6 @@ scp -r -P <PORT> root@<HOST>:/root/moths/outputs/... .
 
 ---
 
-## 🧠 Summary
-
-| Option | When to use | Pros |
-|--------|------------|------|
-| Automated | No GPU yet | Fast, zero setup |
-| Manual | Already have GPU | Full control |
-
----
-
 ## 🔌 Notes
 
 - Use SSH agent forwarding (`-A`) when connecting

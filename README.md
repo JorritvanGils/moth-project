@@ -26,12 +26,12 @@ This project supports **object detection** and **classification** for moth speci
 
 ---
 
-### 🧠 Legend
+<!-- ### 🧠 Legend
 
 - ✅ Implemented → ready to use  
 - 🚧 Planned → not yet implemented  
 
----
+--- -->
 
 ### 📦 Datasets
 

@@ -22,7 +22,7 @@ This project supports **object detection** and **classification** for moth speci
 | DETR | EU Moths Dataset | 🚧 Planned |
 | ViT | EU Moths Dataset | 🚧 Planned |
 | TIMM models | EU Moths Dataset | 🚧 Planned |
-| YOLO | NID Dataset | 🔄 Future |
+| YOLO | NID Dataset | 🚧 Planned |
 
 ---
 
@@ -30,7 +30,6 @@ This project supports **object detection** and **classification** for moth speci
 
 - ✅ Implemented → ready to use  
 - 🚧 Planned → not yet implemented  
-- 🔄 Future → intended but not started  
 
 ---
 

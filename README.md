@@ -157,7 +157,7 @@ python gpu/vast.py
 
 Select:
 ```
-run setup_moth_project.yml
+run install_and_train.yml
 ```
 
 This will:

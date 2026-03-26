@@ -1,5 +1,35 @@
 # 🦋 Moth Project Setup
 
+
+### 🔍 Tasks, Models, and Datasets
+
+| Task | Model | Status | Dataset | Status |
+|------|------|--------|---------|--------|
+| **Detection** | YOLO | ✅ Implemented | NID Dataset | ✅ Supported |
+| **Detection** | Segment Anything | 🚧 Planned | NID Dataset | 🔄 Future |
+| **Classification** | YOLO | ✅ Implemented | EU Moths Dataset | ✅ Supported |
+| **Classification** | DETR | 🚧 Planned | EU Moths Dataset | 🔄 Future |
+| **Classification** | ViT | 🚧 Planned | EU Moths Dataset | 🔄 Future |
+| **Classification** | TIMM models | 🚧 Planned | EU Moths Dataset | 🔄 Future |
+| **Classification** | YOLO | 🔄 Future | NID Dataset | 🚧 Planned |
+
+---
+
+### 🧠 Legend
+
+- ✅ Implemented → ready to use  
+- 🚧 Planned → not yet implemented  
+- 🔄 Future → intended but not started  
+
+---
+
+### 📦 Datasets
+
+- **NID Dataset** → used for detection (YOLO format conversion included)
+- **EU Moths Dataset** → used for classification
+
+---
+
 This project supports **two ways to get started**:
 
 - **⚡ Automated Setup (Recommended)** → rents a GPU + installs everything via Ansible  

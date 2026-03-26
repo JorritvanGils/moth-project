@@ -36,10 +36,12 @@ This project supports **object detection** and **classification** for moth speci
 
 ### 📦 Datasets
 
-- **NID Dataset** → currently used for detection  
-- **EU Moths Dataset** → currently used for classification  
+- **NID Dataset**
+- **EU Moths Dataset**
 
 ---
+
+## ⚡ Quick Start
 
 This project supports **two ways to get started**:
 

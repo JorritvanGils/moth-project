@@ -91,7 +91,7 @@ ssh -A -p <PORT> root@<HOST> -L 8080:localhost:8080
 
 ### 6. Train
 ```bash
-python -m tasks.train
+python -m tasks.run_experiment
 ```
 
 ---
@@ -159,7 +159,7 @@ nano configs/config.yaml
 
 ### 6. Train
 ```bash
-python -m tasks.train
+python -m tasks.run_experiment
 ```
 
 Output example:

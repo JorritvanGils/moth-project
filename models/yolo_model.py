@@ -83,11 +83,3 @@ class YOLOModel(BaseModel):
                 save=True,        # Saves the annotated image
                 **kwargs
             )
-
-    # def predict(self, source, **kwargs):
-    #     # If its true that this section would be used for inference, how would it work?
-    #     # we currently have: train.py
-    #     # do we then need predict.py?
-    #     # - so it should know which model that is/was
-    #     # - it should know on which image(s) it should predict on
-    #     return self.model.predict(source, **kwargs)

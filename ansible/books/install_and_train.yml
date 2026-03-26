@@ -157,13 +157,13 @@
           - "  cd {{ project_dir }} && source .venv/bin/activate"
           - ""
           - "To run training:"
-          - "  cd {{ project_dir }} && python -m tasks.train"
+          - "  cd {{ project_dir }} && python -m tasks.run_experiment"
           - ""
           - "To test environment:"
           - "  {{ project_dir }}/test_env.sh"
 
     # for now at this point in time I would just ssh into the gpu and manually run:
-    # python -m tasks.train | tee outputs/train.log 
+    # python -m tasks.run_experiment | tee outputs/train.log 
     # then try the get_output.yml playbook
     # continue with:
     # - trying a few runs increasing params (notice difference when switch to gpu?)
@@ -178,7 +178,7 @@
     # # be aware log being put into outputs
     # - name: Run training
     #   shell: |
-    #     {{ project_dir }}/.venv/bin/python -m tasks.train | tee {{ project_dir }}/outputs/train.log
+    #     {{ project_dir }}/.venv/bin/python -m tasks.run_experiment | tee {{ project_dir }}/outputs/train.log
     #   args:
     #     chdir: "{{ project_dir }}"
   
@@ -191,6 +191,6 @@
     # # probably this is what we need eventually
     # - name: Start training in background
     #   shell: |
-    #     nohup {{ project_dir }}/.venv/bin/python -m tasks.train > {{ project_dir }}/outputs/train.log 2>&1 &
+    #     nohup {{ project_dir }}/.venv/bin/python -m tasks.run_experiment > {{ project_dir }}/outputs/train.log 2>&1 &
     #   args:
     #     chdir: "{{ project_dir }}"

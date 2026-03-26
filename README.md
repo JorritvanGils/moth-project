@@ -117,7 +117,7 @@ sudo apt update && sudo apt upgrade -y
 
 sudo apt install python3.10 python3.10-venv -y
 
-python3.10 -m venv .venv
+python3.10 -m venv .moth
 source .venv/bin/activate
 ```
 

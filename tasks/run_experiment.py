@@ -8,6 +8,11 @@ from models.yolo_model import YOLOModel
 from models.cls.vit_model import ViTModel
 from models.det.sam_model import SAMModel
 
+# python -m tasks.run_experiment --mode train --config configs/config.yaml
+# python -m tasks.run_experiment --mode predict --path ~/moths/outputs/det/001_20260324_yolo_n
+# python -m tasks.run_experiment --mode predict --path /media/jorrit/ssd/phd/outputs/det/001_20260324_yolo_n
+
+
 OUTPUT_ROOT = os.path.expanduser("~/moths/outputs")
 INFERENCE_SOURCE = "/media/jorrit/ssd/phd/moths/inference_img"
 

@@ -3,6 +3,17 @@ from models.base_model import BaseModel
 import os
 from segment_anything import sam_model_registry, SamPredictor
 
+# Localize objects with SAM3. 
+
+# Dataset paper:
+# - annotat image data. 
+#   - 1) use SAM3 (https://github.com/facebookresearch/sam3) to get masks to select the moths
+#   - 2) convert those masks into BoundingBoxes
+#   - 3) use labelbox (licenced via Uni) to (experts) label the species
+# - publish dataset and annotations
+# - add (sub) species classification. 
+# - Train some baseline latest yolo (Start with yolov8). 
+
 class SAMModel(BaseModel):
     def __init__(self, config: dict):
         """

@@ -79,6 +79,13 @@ class ExperimentManager:
         self.initialize_model(self.exp_config.get("model_type"))
         self.model.train()
         print(f"Training complete: {self.run_dir}")
+        metrics = self.model.evaluate()
+        print(f"Evaluation metrics: {metrics}")
+        for key, value in metrics.items():
+                    print(f"{key:15}: {value:.4f}")
+
+        print(f"now continue with inference flow")    
+
         self.run_inference_flow()
 
     def run_inference_flow(self):

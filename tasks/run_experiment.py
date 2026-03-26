@@ -4,9 +4,9 @@ import argparse
 from datetime import datetime
 from typing import Type
 
-from models.yolo_model import YOLOModel
-from models.cls.vit_model import ViTModel
-from models.det.sam_model import SAMModel
+# from models.yolo_model import YOLOModel
+# from models.cls.vit_model import ViTModel
+# from models.det.sam_model import SAMModel
 
 # python -m tasks.run_experiment --mode train --config configs/config.yaml
 # python -m tasks.run_experiment --mode predict --path ~/moths/outputs/det/001_20260324_yolo_n
@@ -52,7 +52,17 @@ class ExperimentManager:
 
     def initialize_model(self, model_type: str = "yolo"):
         """Initializes model. If self.exp_config exists, use it; else use defaults for inference."""
-        model_map = {"yolo": YOLOModel, "vit": ViTModel, "sam": SAMModel}
+        if model_type == "yolo":
+            from models.yolo_model import YOLOModel
+            ModelClass = YOLOModel
+        elif model_type == "vit":
+            from models.cls.vit_model import ViTModel
+            ModelClass = ViTModel
+        elif model_type == "sam":
+            from models.det.sam_model import SAMModel
+            ModelClass = SAMModel
+        else:
+            raise ValueError(f"Unknown model type: {model_type}")
         
         # If we are inferencing an existing run, we need a skeleton config
         if not self.exp_config:
@@ -62,7 +72,7 @@ class ExperimentManager:
                 "yolo": {"number": 8, "model_size": "n"}
             }
 
-        self.model = model_map[model_type](self.exp_config)
+        self.model = ModelClass(self.exp_config)
 
     def run_train_flow(self):
         self.setup_run_directory()

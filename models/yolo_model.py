@@ -65,12 +65,13 @@ class YOLOModel(BaseModel):
         # And then later for ViT also get similar results. 
         return self.model.val()
 
-    def predict(self, source, save_dir=None, **kwargs):
-            # After training, the best model is usually at 'weights/best.pt' 
-            # inside the output_path we defined.
+    def predict(self, source, save_dir=None, conf=0.02, iou=0.3, **kwargs):
+            """
+            Runs inference. 
+            Lower 'conf' if no bbox predicted (0.02 worked)
+            """
             best_model_path = os.path.join(self.config["output_path"], "weights", "best.pt")
-            
-            # Load the trained weights if they exist, otherwise use the current state
+            print(f"Looking for weights at: {best_model_path}")
             if os.path.exists(best_model_path):
                 inference_model = YOLO(best_model_path)
             else:
@@ -78,8 +79,11 @@ class YOLOModel(BaseModel):
 
             return inference_model.predict(
                 source=source,
-                project=save_dir, # This ensures it saves to your specific run folder
+                project=save_dir,
                 name="inference",
-                save=True,        # Saves the annotated image
+                save=True,
+                conf=conf,
+                iou=iou,
+                exist_ok=True,
                 **kwargs
             )

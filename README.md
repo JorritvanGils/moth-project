@@ -12,6 +12,8 @@ This project supports **object detection** and **classification** for moth speci
 | YOLO | NID Dataset | ✅ Implemented |
 | Segment Anything | NID Dataset | 🚧 Planned |
 
+![Detection example](assets/2020_08_08_Lichtfang_Hahnengrund_6729.jpg)
+
 ---
 
 ### 🧠 Classification

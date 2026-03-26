@@ -41,7 +41,7 @@ This project supports **object detection** and **classification** for moth speci
 
 ---
 
-## ⚡ Quick Start
+# ⚡ Quick Start
 
 This project supports **two ways to get started**:
 

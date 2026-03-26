@@ -1,0 +1,11 @@
+---
+    # Host variables for instance 33583771
+    ansible_host: 91.158.22.66
+    ansible_port: 40016
+    ansible_user: root
+    instance_id: 33583771
+    gpu_name: RTX 3090
+    gpu_count: 1
+    location: Finland, FI
+    ssh_command: ssh -A -p 40016 root@91.158.22.66
+    

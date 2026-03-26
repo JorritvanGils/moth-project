@@ -414,11 +414,13 @@ class SimpleVastDeployer:
                 status = instance_info.get("actual_status", "")
                 
                 if status == "running":
+                    # Get connection info
                     direct_ip = instance_info.get("public_ipaddr")
-                    direct_port = None
-                    proxy_host = instance_info.get("ssh_host")
+                    proxy_host = instance_info.get("ssh_host", "ssh2.vast.ai")
                     proxy_port = instance_info.get("ssh_port")
                     
+                    # Get direct port from port mapping
+                    direct_port = None
                     ssh_mappings = ports.get("22/tcp", [])
                     if ssh_mappings:
                         direct_port = int(ssh_mappings[0].get("HostPort", 22))
@@ -427,8 +429,24 @@ class SimpleVastDeployer:
                     
                     connection_working = False
                     
-                    if direct_ip and direct_port:
-                        print(f"\n📡 Connection option 1 (Direct):")
+                    # Option 1: Try PROXY connection first (more reliable)
+                    if proxy_host and proxy_port:
+                        print(f"\n📡 Connection option 1 (Proxy - Recommended):")
+                        print(f"   Host: {proxy_host}")
+                        print(f"   Port: {proxy_port}")
+                        print(f"   Command: ssh -p {proxy_port} root@{proxy_host}")
+                        
+                        if self._test_ssh_connection(proxy_host, proxy_port):
+                            self.ip = proxy_host
+                            self.ssh_port = proxy_port
+                            connection_working = True
+                            print(f"   ✅ Proxy connection working")
+                        else:
+                            print(f"   ❌ Proxy connection test failed")
+                    
+                    # Option 2: Fall back to DIRECT connection if proxy failed
+                    if not connection_working and direct_ip and direct_port:
+                        print(f"\n📡 Connection option 2 (Direct - Fallback):")
                         print(f"   IP: {direct_ip}")
                         print(f"   Port: {direct_port}")
                         print(f"   Command: ssh -p {direct_port} root@{direct_ip}")
@@ -437,18 +455,9 @@ class SimpleVastDeployer:
                             self.ip = direct_ip
                             self.ssh_port = direct_port
                             connection_working = True
-                    
-                    if not connection_working and proxy_host and proxy_port:
-                        if not (direct_ip == proxy_host and direct_port == proxy_port):
-                            print(f"\n📡 Connection option 2 (Proxy):")
-                            print(f"   Host: {proxy_host}")
-                            print(f"   Port: {proxy_port}")
-                            print(f"   Command: ssh -p {proxy_port} root@{proxy_host}")
-                            
-                            if self._test_ssh_connection(proxy_host, proxy_port):
-                                self.ip = proxy_host
-                                self.ssh_port = proxy_port
-                                connection_working = True
+                            print(f"   ✅ Direct connection working")
+                        else:
+                            print(f"   ❌ Direct connection test failed")
                     
                     if connection_working:
                         print(f"\n✅ Using connection: ssh -p {self.ssh_port} root@{self.ip}")
@@ -490,28 +499,30 @@ class SimpleVastDeployer:
             True if connection works, False otherwise
         """
         try:
+            # Use SSH with a simple echo command for more reliable testing
+            # This actually attempts an SSH connection rather than just port test
             result = subprocess.run(
-                ["nc", "-z", "-w", str(timeout), host, str(port)],
+                ["ssh", "-p", str(port), "-o", "ConnectTimeout=5", 
+                "-o", "StrictHostKeyChecking=no", 
+                "-o", "PasswordAuthentication=no",
+                f"root@{host}", "echo 'test'"],
                 capture_output=True,
-                timeout=timeout + 1
+                timeout=timeout + 2
             )
+            
             if result.returncode == 0:
-                print(f"   ✅ Connection test successful")
+                print(f"   ✅ SSH connection test successful")
                 return True
             else:
-                print(f"   ❌ Connection test failed")
+                print(f"   ❌ SSH connection test failed: {result.stderr.decode().strip()}")
                 return False
-        except (subprocess.SubprocessError, FileNotFoundError):
-            try:
-                result = subprocess.run(
-                    ["ssh", "-p", str(port), "-o", "ConnectTimeout=5", "-o", "StrictHostKeyChecking=no", 
-                    f"root@{host}", "echo 'test'"],
-                    capture_output=True,
-                    timeout=timeout + 2
-                )
-                return result.returncode == 0
-            except:
-                return False
+                
+        except subprocess.TimeoutExpired:
+            print(f"   ❌ SSH connection timeout")
+            return False
+        except Exception as e:
+            print(f"   ❌ SSH connection error: {e}")
+            return False
 
     def ssh_to_instance(self) -> None:
         """SSH into the instance"""

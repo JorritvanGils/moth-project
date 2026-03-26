@@ -65,10 +65,29 @@ class YOLOModel(BaseModel):
         # And then later for ViT also get similar results. 
         return self.model.val()
 
-    def predict(self, source, **kwargs):
-        # If its true that this section would be used for inference, how would it work?
-        # we currently have: train.py
-        # do we then need predict.py?
-        # - so it should know which model that is/was
-        # - it should know on which image(s) it should predict on
-        return self.model.predict(source, **kwargs)
+    def predict(self, source, save_dir=None, **kwargs):
+            # After training, the best model is usually at 'weights/best.pt' 
+            # inside the output_path we defined.
+            best_model_path = os.path.join(self.config["output_path"], "weights", "best.pt")
+            
+            # Load the trained weights if they exist, otherwise use the current state
+            if os.path.exists(best_model_path):
+                inference_model = YOLO(best_model_path)
+            else:
+                inference_model = self.model
+
+            return inference_model.predict(
+                source=source,
+                project=save_dir, # This ensures it saves to your specific run folder
+                name="inference",
+                save=True,        # Saves the annotated image
+                **kwargs
+            )
+
+    # def predict(self, source, **kwargs):
+    #     # If its true that this section would be used for inference, how would it work?
+    #     # we currently have: train.py
+    #     # do we then need predict.py?
+    #     # - so it should know which model that is/was
+    #     # - it should know on which image(s) it should predict on
+    #     return self.model.predict(source, **kwargs)

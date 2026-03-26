@@ -1,4 +1,4 @@
-# 🦋 Moth Project Setup
+# 🦋 Moth Project
 
 
 This project supports **object detection** and **classification** for moth species, with an expanding set of models and datasets.

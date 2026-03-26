@@ -1,17 +1,28 @@
 # 🦋 Moth Project Setup
 
 
-### 🔍 Tasks, Models, and Datasets
+This project supports **object detection** and **classification** for moth species, with an expanding set of models and datasets.
 
-| Task | Model | Status | Dataset | Status |
-|------|------|--------|---------|--------|
-| **Detection** | YOLO | ✅ Implemented | NID Dataset | ✅ Supported |
-| **Detection** | Segment Anything | 🚧 Planned | NID Dataset | 🔄 Future |
-| **Classification** | YOLO | ✅ Implemented | EU Moths Dataset | ✅ Supported |
-| **Classification** | DETR | 🚧 Planned | EU Moths Dataset | 🔄 Future |
-| **Classification** | ViT | 🚧 Planned | EU Moths Dataset | 🔄 Future |
-| **Classification** | TIMM models | 🚧 Planned | EU Moths Dataset | 🔄 Future |
-| **Classification** | YOLO | 🔄 Future | NID Dataset | 🚧 Planned |
+---
+
+### 🔍 Detection
+
+| Model | Dataset | Status |
+|------|--------|--------|
+| YOLO | NID Dataset | ✅ Implemented |
+| Segment Anything | NID Dataset | 🚧 Planned |
+
+---
+
+### 🧠 Classification
+
+| Model | Dataset | Status |
+|------|--------|--------|
+| YOLO | EU Moths Dataset | ✅ Implemented |
+| DETR | EU Moths Dataset | 🚧 Planned |
+| ViT | EU Moths Dataset | 🚧 Planned |
+| TIMM models | EU Moths Dataset | 🚧 Planned |
+| YOLO | NID Dataset | 🔄 Future |
 
 ---
 
@@ -25,8 +36,8 @@
 
 ### 📦 Datasets
 
-- **NID Dataset** → used for detection (YOLO format conversion included)
-- **EU Moths Dataset** → used for classification
+- **NID Dataset** → currently used for detection  
+- **EU Moths Dataset** → currently used for classification  
 
 ---
 
